@@ -2,6 +2,8 @@ import java.util.HashMap;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 
 public class Main {
     /*
@@ -22,7 +24,7 @@ public class Main {
     Если копирование идентификаторов пользователя и/или группы закончилось неудачно,
     то в копии файла сбрасываются биты setuid и setgid.
 
-    
+
     опции:
      -h  - help
      -f  - force
@@ -46,7 +48,8 @@ public class Main {
         INTERACTIVE,
         BACKUP,
         UPDATE,
-        VERBOSE
+        VERBOSE,
+        PRINTHELP
     }
 
     public enum OSType {
@@ -67,41 +70,70 @@ public class Main {
     public static HashMap<Option,Boolean> useOption = new HashMap<>(5);
     public static String OS = null;
     public static Logger log = Logger.getLogger(Main.class.getName());
+    public static WorkMode workMode = WorkMode.UNKNOW;
 
     public static void main (String[] args) {
+        //ArgType[] arg_types = new Boolean[3];
         //инициализация
         boolean debug = true;
         String first_arg = null;
         String two_arg = null;
         String tree_arg = null;
-        WorkMode workMode = WorkMode.UNKNOW;
+        //WorkMode workMode = WorkMode.UNKNOW;
         log.setLevel(Level.INFO);
+        //режимы работы утилиты
         if( useOption.isEmpty()); {
-            useOption.put(Option.FORCE,false);
-            useOption.put(Option.INTERACTIVE,false);
+            useOption.put(Option.FORCE,false);       //выполняет попытку перемещения игнорируя отсутствия прав
+            useOption.put(Option.INTERACTIVE,false); //спрашивает разрешение перед каждым перемещением
+            //опции BACKUP & UPDATE исключают друг друга
             useOption.put(Option.BACKUP,false);
             useOption.put(Option.UPDATE,false);
+            //выводить полробную информацию о ходе перемещения.
             useOption.put(Option.VERBOSE,false);
+            useOption.put(Option.PRINTHELP,false);
         }
         //проверка параметров.
         // Первый аргумент: либо файл, либо каталог, либо строка с опциями, либо строка с маской для выбора файлов
         if (args.length == 0) {
             log.warning("передана пустая строка параметров");
             if (debug) {
-                first_arg = "F:\\test_file2.txt";
+                first_arg = "F:\\test_file2.tx0t";
                 two_arg = "E:\\test_file.txt";
                 tree_arg = null;
             } else return;
         }
         if (args.length > 3) {
             log.warning("количество параметров > 3");
-            //return;
+            return;
         }
         first_arg = args[0];
         two_arg = args[1];
-        //tree_arg = args[2];
+        tree_arg = args[2];
         ArgType argType1 = getArgType(first_arg);
         ArgType argType2 = getArgType(two_arg);
+        ArgType argType3 = getArgType(tree_arg);
+        if (argType1 == ArgType.OPTION_STRING) {
+            if (first_arg.toLowerCase().contains("f")) {
+                Main.useOption.replace(Option.FORCE,true);
+                log.info("force mode enable");
+            }
+            if (first_arg.toLowerCase().contains("h")) {
+                Main.useOption.replace(Option.PRINTHELP, true);
+                log.info("print help mode enable");
+            }
+
+            if (first_arg.toLowerCase().contains("i")) {
+                Main.useOption.replace(Option.INTERACTIVE,true);
+                log.info("interactive mode enable");
+            }
+            if (first_arg.toLowerCase().contains("b")) {
+                Main.useOption.replace(Option.BACKUP,true);
+                log.info("backup mode enable");
+            }
+            if (first_arg.toLowerCase().contains("u")) {
+                Main.useOption.replace(Option.UPDATE,true);
+            }
+        }
         if ( (argType1 == ArgType.FILE && argType2 == ArgType.FILE) || (argType1 == ArgType.FILE && argType2 == ArgType.CATALOG_FILEMASK)  ) {
             workMode = WorkMode.FILE_TO_FILE;
         }
@@ -114,7 +146,7 @@ public class Main {
         if ( argType1 == ArgType.CATALOG && argType2 == ArgType.CATALOG) {
             workMode = WorkMode.CATALOG_MOVE;
         }
-        if (workMode == WorkMode.UNKNOW) {return; };
+        if ( workMode == WorkMode.UNKNOW ) {return; };
         log.info(workMode.toString());
         //перемещаю файлы
         //
@@ -164,12 +196,16 @@ public class Main {
     }
 
     private static ArgType getArgType(String arg) {
+        //эта строка - строка с параметрами работы?
+        if ( arg.charAt(0) == '-') return ArgType.OPTION_STRING;
+        // эта строка - существующий путь в файловой системе?
         File f = new File(arg);
         if (f.exists()) {
             log.info("path "+arg+" exists");
             if (f.isDirectory()) return ArgType.CATALOG;
             if (f.isFile()) return ArgType.FILE;
         } else {
+            //если это не строка  и не каталог, то ... возможно это путь к уже существующему файлу?
             int i;
             if (isWindows()); i = arg.lastIndexOf(File.separatorChar);
             if (isUnix()); i = arg.lastIndexOf(File.separatorChar);
@@ -182,7 +218,7 @@ public class Main {
                 return  ArgType.CATALOG_FILEMASK;
             };
         }
-        //не удалось определить тип
+        //не удалось определить тип аргумента
         return ArgType.UNKNOWN;
     }
 
@@ -212,4 +248,46 @@ public class Main {
         return OS;
     }
 
+    private static void create_path(String path) {
+        //проверить, существует ли указанный путь
+        File f = new File(path);
+        if ( f.exists() ) return;
+        //проверить возможность создания, если такой возможности нет? то завершить работу
+        if ( !f.canWrite() ) {
+            log.warning("catalog: "+f.getAbsolutePath() + " is write protected");
+            return;
+        } else {
+            //создатть директорию.
+            if (f.mkdir()) {
+                log.info("calog: " + f.getAbsolutePath() + " created");
+            } else {
+                log.warning("cannot create " + f.getAbsolutePath());
+            }
+        }
+    }
+
+    private static void copy_file(String oldFullName, String newFullName) {
+        //проверяю наличие нового пути
+        File oldName = new File(oldFullName);
+        File newName = new File(newFullName);
+        if ( ! oldName.exists()) {
+            log.warning("path "+oldName.getAbsolutePath()+ " not exists");
+            return;
+        }
+
+        if ( ! newName.exists() ) {
+            if (workMode == WorkMode.FILE_IN_CATALOG) {
+                //если требуется и возможно, создаю каталог.
+                //
+                newName.mkdir();
+            } else {
+                log.warning("path " + newName.getAbsolutePath() + " not exists");
+                return;
+            }
+        }
+
+        //copy file
+
+
+    }
 }
