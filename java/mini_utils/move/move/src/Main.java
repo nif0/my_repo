@@ -1,9 +1,8 @@
+import java.io.*;
 import java.util.HashMap;
-import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.io.FileInputStream
 
 public class Main {
     /*
@@ -274,20 +273,40 @@ public class Main {
             log.warning("path "+oldName.getAbsolutePath()+ " not exists");
             return;
         }
-
         if ( ! newName.exists() ) {
             if (workMode == WorkMode.FILE_IN_CATALOG) {
                 //если требуется и возможно, создаю каталог.
                 //
                 newName.mkdir();
+                //нужно удалить старый(если есть) и создать новый файл.
             } else {
                 log.warning("path " + newName.getAbsolutePath() + " not exists");
                 return;
             }
         }
-
         //copy file
+        FileInputStream fileInput = null;
+        FileOutputStream fileOutput = null;
 
+        int aval = 0;
+        int b = 0;
+        try {
+            fileInput = new FileInputStream(oldName);
+            fileOutput = new FileOutputStream(newName,true);
+            aval = fileInput.available();
+
+            while ( (b=fileInput.read()) !=-1 ) {
+                fileOutput.write(b);
+            }
+            fileOutput.flush();
+            fileOutput.close();
+            fileInput.close();
+        } catch (FileNotFoundException e) {
+            log.warning("file: " + oldName.getName() + " not found");
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }
