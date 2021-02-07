@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.io.FileInputStream
+import java.io.FileInputStream;
 
 public class Main {
     /*
@@ -93,21 +93,31 @@ public class Main {
         }
         //проверка параметров.
         // Первый аргумент: либо файл, либо каталог, либо строка с опциями, либо строка с маской для выбора файлов
-        if (args.length == 0) {
-            log.warning("передана пустая строка параметров");
-            if (debug) {
-                first_arg = "F:\\test_file2.tx0t";
-                two_arg = "E:\\test_file.txt";
-                tree_arg = null;
-            } else return;
+        switch (args.length) {
+            case 0:
+                log.warning("передана пустая строка параметров");
+                if (debug) {
+                    first_arg = "F:\\test_file2.tx0t";
+                    two_arg = "E:\\test_file.txt";
+                    tree_arg = null;
+                } else return;
+                break;
+
+            case 2:
+                first_arg = args[0];
+                two_arg = args[1];
+                break;
+
+            case 3:
+                first_arg = args[0];
+                two_arg = args[1];
+                tree_arg = args[2];
+                break;
+
+            default:
+                log.warning("error in the number of parameters");
         }
-        if (args.length > 3) {
-            log.warning("количество параметров > 3");
-            return;
-        }
-        first_arg = args[0];
-        two_arg = args[1];
-        tree_arg = args[2];
+        //анализирую аргументы по типу. Включаю опции.
         ArgType argType1 = getArgType(first_arg);
         ArgType argType2 = getArgType(two_arg);
         ArgType argType3 = getArgType(tree_arg);
@@ -116,6 +126,7 @@ public class Main {
                 Main.useOption.replace(Option.FORCE,true);
                 log.info("force mode enable");
             }
+
             if (first_arg.toLowerCase().contains("h")) {
                 Main.useOption.replace(Option.PRINTHELP, true);
                 log.info("print help mode enable");
@@ -125,14 +136,23 @@ public class Main {
                 Main.useOption.replace(Option.INTERACTIVE,true);
                 log.info("interactive mode enable");
             }
+
             if (first_arg.toLowerCase().contains("b")) {
                 Main.useOption.replace(Option.BACKUP,true);
                 log.info("backup mode enable");
             }
+
             if (first_arg.toLowerCase().contains("u")) {
                 Main.useOption.replace(Option.UPDATE,true);
             }
+
+            first_arg = two_arg;
+            two_arg = tree_arg;
+            tree_arg = null;
+            argType1 = getArgType(first_arg);
+            argType2 = getArgType(two_arg);
         }
+
         if ( (argType1 == ArgType.FILE && argType2 == ArgType.FILE) || (argType1 == ArgType.FILE && argType2 == ArgType.CATALOG_FILEMASK)  ) {
             workMode = WorkMode.FILE_TO_FILE;
         }
@@ -196,6 +216,11 @@ public class Main {
 
     private static ArgType getArgType(String arg) {
         //эта строка - строка с параметрами работы?
+        log.info(arg);
+        if ( arg == null || arg.isEmpty() ) {
+            log.info("argument is null");
+            return ArgType.UNKNOWN;
+        }
         if ( arg.charAt(0) == '-') return ArgType.OPTION_STRING;
         // эта строка - существующий путь в файловой системе?
         File f = new File(arg);
@@ -264,39 +289,37 @@ public class Main {
             }
         }
     }
-
-    private static void copy_file(String oldFullName, String newFullName) {
-        //проверяю наличие нового пути
+/*
+    private static void move_file(String oldFullName, String newFullName) {
+        //перемещаю как копирование + удаление.
+        //проверяю наличие нового пути и копирую. Функция предназначена для копирования только 1го файла за раз.
         File oldName = new File(oldFullName);
         File newName = new File(newFullName);
-        if ( ! oldName.exists()) {
-            log.warning("path "+oldName.getAbsolutePath()+ " not exists");
-            return;
-        }
-        if ( ! newName.exists() ) {
-            if (workMode == WorkMode.FILE_IN_CATALOG) {
-                //если требуется и возможно, создаю каталог.
-                //
-                newName.mkdir();
-                //нужно удалить старый(если есть) и создать новый файл.
-            } else {
-                log.warning("path " + newName.getAbsolutePath() + " not exists");
+        File newFileCatalog = newName.getParentFile();
+
+        if ( newFileCatalog.exists() && newFileCatalog.isDirectory() ) {
+            if ( ! oldName.exists()) {
+                log.warning("path "+oldName.getAbsolutePath()+ " not exists");
                 return;
             }
+        } else {
+            log.warning("path: " + newFileCatalog.toString() + " not exists or this is not directory ");
+            return;
         }
+
         //copy file
+        //копирую по байтам. В планах добавить отображение прогресса.
         FileInputStream fileInput = null;
         FileOutputStream fileOutput = null;
-
         int aval = 0;
         int b = 0;
         try {
-            fileInput = new FileInputStream(oldName);
-            fileOutput = new FileOutputStream(newName,true);
-            aval = fileInput.available();
+             fileInput = new FileInputStream(oldName);
+             fileOutput = new FileOutputStream(newName,true);
+             aval = fileInput.available();
 
             while ( (b=fileInput.read()) !=-1 ) {
-                fileOutput.write(b);
+                  fileOutput.write(b);
             }
             fileOutput.flush();
             fileOutput.close();
@@ -309,4 +332,6 @@ public class Main {
         }
 
     }
+
+ */
 }
