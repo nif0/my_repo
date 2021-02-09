@@ -22,8 +22,6 @@ public class Main {
     к файлу если это возможно.
     Если копирование идентификаторов пользователя и/или группы закончилось неудачно,
     то в копии файла сбрасываются биты setuid и setgid.
-
-
     опции:
      -h  - help
      -f  - force
@@ -33,6 +31,8 @@ public class Main {
      -u  - update
      -v[1,5] - вывод отладочной информации. чем ольше v, ьем подробней отладка.
      */
+
+
 
     public  enum WorkMode{
         CATALOG_MOVE,
@@ -59,11 +59,11 @@ public class Main {
     }
 
     public enum ArgType {
-        CATALOG,
-        FILE,
-        CATALOG_FILEMASK,
-        OPTION_STRING,
-        UNKNOWN
+        CATALOG, // аргумент - каталог,
+        FILE,    // аргумент - файл
+        CATALOG_FILEMASK, // аргумент - несуществующее имя
+        OPTION_STRING,    // аргумент - строка опций
+        UNKNOWN           //аргумент -пустая строка, либо не определён.
     }
 
     public static HashMap<Option,Boolean> useOption = new HashMap<>(5);
@@ -162,7 +162,8 @@ public class Main {
         if ( argType1 == ArgType.CATALOG_FILEMASK && argType2 == ArgType.CATALOG) {
             workMode = WorkMode.GROUP_FILE_IN_CATALOG;
         }
-        if ( argType1 == ArgType.CATALOG && argType2 == ArgType.CATALOG) {
+        if (( argType1 == ArgType.CATALOG && argType2 == ArgType.CATALOG) || ( argType1 == ArgType.CATALOG && argType2 == ArgType.CATALOG_FILEMASK))
+        {
             workMode = WorkMode.CATALOG_MOVE;
         }
         if ( workMode == WorkMode.UNKNOW ) {return; };
@@ -198,6 +199,10 @@ public class Main {
                 }
                 break;
             case GROUP_FILE_IN_CATALOG:
+                f = new File(first_arg);
+                for (int i = 0; i < f.list().length; i++) ; {
+
+                }
                 break;
             case FILE_TO_FILE:
                 f = new File(first_arg);
@@ -217,6 +222,8 @@ public class Main {
     private static ArgType getArgType(String arg) {
         //эта строка - строка с параметрами работы?
         log.info(arg);
+        log.info("OS name: " + getOSName());
+        log.info("seperator char: " + File.separatorChar);
         if ( arg == null || arg.isEmpty() ) {
             log.info("argument is null");
             return ArgType.UNKNOWN;
@@ -229,7 +236,9 @@ public class Main {
             if (f.isDirectory()) return ArgType.CATALOG;
             if (f.isFile()) return ArgType.FILE;
         } else {
-            //если это не строка  и не каталог, то ... возможно это путь к уже существующему файлу?
+            //если это не строка  и не каталог, то ... возможно это путь к несуществующему файлу?
+            //в этом случае нужно проверить, существует ли родительский каталог.
+            //Если строка: "существующий путь"/несуществующее_имя, то тип аргумента CATALOG_FILEMASK
             int i;
             if (isWindows()); i = arg.lastIndexOf(File.separatorChar);
             if (isUnix()); i = arg.lastIndexOf(File.separatorChar);

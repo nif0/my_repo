@@ -1,0 +1,19 @@
+Случай №1:
+
+INFO: F:/demo-big-20170815.sql
+фев 09, 2021 12:35:07 PM Main getArgType
+INFO: OS name: Windows 10
+фев 09, 2021 12:35:07 PM Main getArgType
+INFO: seperator char: \
+фев 09, 2021 12:35:07 PM Main getArgType
+INFO: path F:/demo-big-20170815.sql exists
+фев 09, 2021 12:35:07 PM Main getArgType
+INFO: F:/demo-big-20170815_1.sql
+фев 09, 2021 12:35:07 PM Main getArgType
+INFO: OS name: Windows 10
+фев 09, 2021 12:35:07 PM Main getArgType
+INFO: seperator char: \
+Exception in thread "main" java.lang.StringIndexOutOfBoundsException: String index out of range: -1
+	at java.lang.String.substring(Unknown Source)
+	at Main.getArgType(Main.java:244)
+	at Main.main(Main.java:122)
