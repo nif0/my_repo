@@ -237,11 +237,15 @@ public class Main {
         if ( arg.charAt(0) == '-') return ArgType.OPTION_STRING;
         // эта строка - существующий путь в файловой системе?
         File f = new File(arg);
-        if (f.exists()) {
+        log.info(f.toString());
+        if (f.exists() && f.list().length == 1) {
             log.info("path "+arg+" exists");
             if (f.isDirectory()) return ArgType.CATALOG;
             if (f.isFile()) return ArgType.FILE;
         } else {
+            if (f.exists() && f.list().length > 1) {
+                return ArgType.CATALOG_FILEMASK;
+            }
             //если это не строка  и не каталог, то ... возможно это путь к несуществующему файлу?
             //в этом случае нужно проверить, существует ли родительский каталог.
             //Если строка: "существующий путь"/несуществующее_имя, то тип аргумента CATALOG_FILEMASK
