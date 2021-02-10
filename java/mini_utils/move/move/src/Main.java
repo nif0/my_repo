@@ -200,8 +200,14 @@ public class Main {
                 break;
             case GROUP_FILE_IN_CATALOG:
                 f = new File(first_arg);
-                for (int i = 0; i < f.list().length; i++) ; {
-
+                f2 = new File(two_arg);
+                if ( f2.exists() && f2.isDirectory() ) {
+                    for (int i = 0; i < f.list().length; i++) ;
+                    {
+                        f.renameTo(new File(f2.getAbsolutePath() + File.pathSeparator + f.getName()));
+                    }
+                } else {
+                    log.warning("the path: " + f2.getAbsolutePath() + "does not exist or it is not a directory");
                 }
                 break;
             case FILE_TO_FILE:
