@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.FileInputStream;
+import java.util.regex.Pattern;
 
 public class Main {
     /*
@@ -153,7 +154,8 @@ public class Main {
             argType2 = getArgType(two_arg);
         }
 
-        if ( (argType1 == ArgType.FILE && argType2 == ArgType.FILE) || (argType1 == ArgType.FILE && argType2 == ArgType.CATALOG_FILEMASK)  ) {
+        if ( (argType1 == ArgType.FILE && argType2 == ArgType.FILE) ||
+                (argType1 == ArgType.FILE && argType2 == ArgType.CATALOG_FILEMASK)  ) {
             workMode = WorkMode.FILE_TO_FILE;
         }
         if ( argType1 == ArgType.FILE && argType2 == ArgType.CATALOG) {
@@ -227,7 +229,7 @@ public class Main {
 
     private static ArgType getArgType(String arg) {
         //эта строка - строка с параметрами работы?
-        log.info(arg);
+        //log.info(arg);
         log.info("OS name: " + getOSName());
         log.info("seperator char: " + File.separatorChar);
         if ( arg == null || arg.isEmpty() ) {
@@ -237,30 +239,15 @@ public class Main {
         if ( arg.charAt(0) == '-') return ArgType.OPTION_STRING;
         // эта строка - существующий путь в файловой системе?
         File f = new File(arg);
-        log.info(f.toString());
-        if (f.exists() && f.list().length == 1) {
-            log.info("path "+arg+" exists");
-            if (f.isDirectory()) return ArgType.CATALOG;
-            if (f.isFile()) return ArgType.FILE;
-        } else {
-            if (f.exists() && f.list().length > 1) {
-                return ArgType.CATALOG_FILEMASK;
-            }
-            //если это не строка  и не каталог, то ... возможно это путь к несуществующему файлу?
+        log.info(String.valueOf(f.toString().length()));
+        //String is directory
+        if (f.exists() && f.isDirectory() ) return ArgType.CATALOG;
+        if (f.exists() && f.isFile() ) return ArgType.FILE;
+
+        //если это не строка  и не каталог, то ... возможно это путь к несуществующему файлу?
             //в этом случае нужно проверить, существует ли родительский каталог.
             //Если строка: "существующий путь"/несуществующее_имя, то тип аргумента CATALOG_FILEMASK
-            int i;
-            if (isWindows()); i = arg.lastIndexOf(File.separatorChar);
-            if (isUnix()); i = arg.lastIndexOf(File.separatorChar);
-            String subsFName = arg.substring(i,arg.length());
-            String subsDirName = arg.substring(0,i);
-            log.info("каталог: " + subsDirName + "файл: "+subsFName);
-            f = new File(subsDirName);
-            if (f.isDirectory()) {
-                log.info("path: " + subsDirName + " exists. " + subsFName + " as filemask");
-                return  ArgType.CATALOG_FILEMASK;
-            };
-        }
+
         //не удалось определить тип аргумента
         return ArgType.UNKNOWN;
     }
