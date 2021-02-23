@@ -8,27 +8,20 @@ package com.company;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.regex.*;
 
-class DirFilter implements  FilenameFilter{
-    private String regexp;
+ class DirFilter implements  FilenameFilter{
     private Pattern pattern;
-    public DirFilter (String regex) {
-        this.regexp = regexp;
+    public DirFilter (String regexp) {
         pattern = Pattern.compile(regexp);
     }
 
     @Override
     public boolean accept(File dir, String name) {
-        /*
-        the "dir" directory contains the "name" file; If "name" mathes a regular expression,
-        it returns true, otherwise false.
-         */
-        */
-         */
-        return false;
+            return pattern.matcher(name).matches();
     }
 }
 
@@ -48,9 +41,15 @@ public class Main {
         }
         String param = args[0];
         File file = new File(param);
+        try {
+            System.out.println(file.getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         File[] listFiles;
         //FFilter filter = new FFilter(param);
-        listFiles = file.listFiles();
+         DirFilter dirFilter = new DirFilter(".*.xml");
+        listFiles = file.listFiles(dirFilter);
 
         for (File f: listFiles
              ) {
