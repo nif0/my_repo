@@ -48,8 +48,30 @@ public class Main {
         }
         File[] listFiles;
         //FFilter filter = new FFilter(param);
-         DirFilter dirFilter = new DirFilter(".*.xml");
+        //отделяю существующую часть пути от маски имени файла
+        //в итоге ожидаю объект file с существующим путём(часть строки param).
+        //оставшуюся часть строки буду читать как маску
+        while (!file.exists()) {
+            file = new File(file.getParent());
+            System.out.println("tick");
+            System.out.println("new work path: " + file.getPath());
+         //   System.out.println(param.compareTo(file.getPath()));
+        }
+        /*
+           довольно странно использовать для определения позиции маски метод compare
+           но символы в строках совпадают. В этом случае cpmpare возвращает
+           разницу строки, для которой вызываю метод, и строки с которой сравниваю.
+           А в случае с param.compareTo(file.getPath())
+           срока 2 это подмножество строки 1.
+           Пока не  разобрался почему lastIndex и indexOf возвращают 0 в результате.
+        */
+        int delta = param.compareTo(file.getPath());
+        String mask = param.substring(param.length()-delta+1,param.length());
+        System.out.println("work path: " + file.getPath());
+        System.out.println("mask: " + mask);
+        DirFilter dirFilter = new DirFilter(".*xml$");
         listFiles = file.listFiles(dirFilter);
+
 
         for (File f: listFiles
              ) {
@@ -151,6 +173,5 @@ public class Main {
                 System.out.println();
             }
         }
-
     }
 }
