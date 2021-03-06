@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,185 +72,38 @@ public class Main {
     public static String OS = null;
     public static Logger log = Logger.getLogger(Main.class.getName());
     public static WorkMode workMode = WorkMode.UNKNOW;
+    public static ArrayList<File> fileList = new ArrayList<>();
+    public static OSType osType;
 
     public static void main (String[] args) {
-        //ArgType[] arg_types = new Boolean[3];
-        //инициализация
-        boolean debug = true;
-        String first_arg = null;
-        String two_arg = null;
-        String tree_arg = null;
-        //WorkMode workMode = WorkMode.UNKNOW;
-        log.setLevel(Level.INFO);
-        //режимы работы утилиты
-        if( useOption.isEmpty()); {
-            useOption.put(Option.FORCE,false);       //выполняет попытку перемещения игнорируя отсутствия прав
-            useOption.put(Option.INTERACTIVE,false); //спрашивает разрешение перед каждым перемещением
-            //опции BACKUP & UPDATE исключают друг друга
-            useOption.put(Option.BACKUP,false);
-            useOption.put(Option.UPDATE,false);
-            //выводить полробную информацию о ходе перемещения.
-            useOption.put(Option.VERBOSE,false);
-            useOption.put(Option.PRINTHELP,false);
-        }
-        //проверка параметров.
-        // Первый аргумент: либо файл, либо каталог, либо строка с опциями, либо строка с маской для выбора файлов
+        // сбор информацций о системе: тип  ОС, разделитель путей, список точек монтирования,
+        osType = getOSType();
+        String separator = File.separatorChar + "";
+        File[] disks = File.listRoots();
+        String userName = System.getProperty("user.name");
+
+        //   0. строка параметров для работы утилиты.
+        //   1. что перемещаю(можно маску)
+        //   2. куда перемещаю(файл, если 1 - одиночный файл. каталог, если 1 - маска файлов)
+        //   анализ параметров. и настройка утилиты для работы.
+        
         switch (args.length) {
-            case 0:
-                log.warning("передана пустая строка параметров");
-                if (debug) {
-                    first_arg = "F:\\test_file2.tx0t";
-                    two_arg = "E:\\test_file.txt";
-                    tree_arg = null;
-                } else return;
-                break;
-
-            case 2:
-                first_arg = args[0];
-                two_arg = args[1];
-                break;
-
-            case 3:
-                first_arg = args[0];
-                two_arg = args[1];
-                tree_arg = args[2];
-                break;
-
-            default:
-                log.warning("error in the number of parameters");
-        }
-        //анализирую аргументы по типу. Включаю опции.
-        ArgType argType1 = getArgType(first_arg);
-        ArgType argType2 = getArgType(two_arg);
-        ArgType argType3 = getArgType(tree_arg);
-        if (argType1 == ArgType.OPTION_STRING) {
-            if (first_arg.toLowerCase().contains("f")) {
-                Main.useOption.replace(Option.FORCE,true);
-                log.info("force mode enable");
+            case 0: return;
+            case 1: {
+                System.out.println("передан 1 аргумент. Что недостаточно для нормальной работы. \n Завершаю программу");
+                return;
             }
-
-            if (first_arg.toLowerCase().contains("h")) {
-                Main.useOption.replace(Option.PRINTHELP, true);
-                log.info("print help mode enable");
-            }
-
-            if (first_arg.toLowerCase().contains("i")) {
-                Main.useOption.replace(Option.INTERACTIVE,true);
-                log.info("interactive mode enable");
-            }
-
-            if (first_arg.toLowerCase().contains("b")) {
-                Main.useOption.replace(Option.BACKUP,true);
-                log.info("backup mode enable");
-            }
-
-            if (first_arg.toLowerCase().contains("u")) {
-                Main.useOption.replace(Option.UPDATE,true);
-            }
-
-            first_arg = two_arg;
-            two_arg = tree_arg;
-            tree_arg = null;
-            argType1 = getArgType(first_arg);
-            argType2 = getArgType(two_arg);
-        }
-
-        if ( (argType1 == ArgType.FILE && argType2 == ArgType.FILE) ||
-                (argType1 == ArgType.FILE && argType2 == ArgType.CATALOG_FILEMASK)  ) {
-            workMode = WorkMode.FILE_TO_FILE;
-        }
-        if ( argType1 == ArgType.FILE && argType2 == ArgType.CATALOG) {
-            workMode = WorkMode.FILE_IN_CATALOG;
-        }
-        if ( argType1 == ArgType.CATALOG_FILEMASK && argType2 == ArgType.CATALOG) {
-            workMode = WorkMode.GROUP_FILE_IN_CATALOG;
-        }
-        if (( argType1 == ArgType.CATALOG && argType2 == ArgType.CATALOG) || ( argType1 == ArgType.CATALOG && argType2 == ArgType.CATALOG_FILEMASK))
-        {
-            workMode = WorkMode.CATALOG_MOVE;
-        }
-        if ( workMode == WorkMode.UNKNOW ) {return; };
-        log.info(workMode.toString());
-        //перемещаю файлы
-        //
-        File f = null;
-        File f2 = null;
-        switch (workMode) {
-            case CATALOG_MOVE:
-                f = new File(first_arg);
-                f2 = new File(two_arg);
-                if (f.renameTo(f2)) {
-                    log.info("file moved");
-                    return;
-                }
+            case 2: {
+                //для 2х аргументов
                 break;
-            case FILE_IN_CATALOG:
-                f = new File(first_arg);
-                f2 = null;
-                if (two_arg.charAt(two_arg.length()-1) == File.pathSeparatorChar) {
-                    f2 = new File(two_arg + first_arg);
-                } else {
-                    f2 = new File(two_arg + File.pathSeparatorChar + first_arg);
-                }
-                if (f2 == null) {
-                    log.warning("target \"" + two_arg + "\" not identified");
-                    return;
-                }
-                if (f.renameTo(f2)) {
-                    log.info("file moved");
-                    return;
-                }
+            }
+            case 3: {
+                //для 3х аргументов
                 break;
-            case GROUP_FILE_IN_CATALOG:
-                f = new File(first_arg);
-                f2 = new File(two_arg);
-                if ( f2.exists() && f2.isDirectory() ) {
-                    for (int i = 0; i < f.list().length; i++) ;
-                    {
-                        f.renameTo(new File(f2.getAbsolutePath() + File.pathSeparator + f.getName()));
-                    }
-                } else {
-                    log.warning("the path: " + f2.getAbsolutePath() + "does not exist or it is not a directory");
-                }
-                break;
-            case FILE_TO_FILE:
-                f = new File(first_arg);
-                f2 = new File(two_arg);
-                if (f.renameTo(f2)) {
-                    log.info("file moved");
-                    return;
-                }
-                break;
+            }
         }
-    }
-
-    private static void printhelp() {
-
-    }
-
-    private static ArgType getArgType(String arg) {
-        //эта строка - строка с параметрами работы?
-        //log.info(arg);
-        log.info("OS name: " + getOSName());
-        log.info("seperator char: " + File.separatorChar);
-        if ( arg == null || arg.isEmpty() ) {
-            log.info("argument is null");
-            return ArgType.UNKNOWN;
-        }
-        if ( arg.charAt(0) == '-') return ArgType.OPTION_STRING;
-        // эта строка - существующий путь в файловой системе?
-        File f = new File(arg);
-        log.info(String.valueOf(f.toString().length()));
-        //String is directory
-        if (f.exists() && f.isDirectory() ) return ArgType.CATALOG;
-        if (f.exists() && f.isFile() ) return ArgType.FILE;
-
-        //если это не строка  и не каталог, то ... возможно это путь к несуществующему файлу?
-            //в этом случае нужно проверить, существует ли родительский каталог.
-            //Если строка: "существующий путь"/несуществующее_имя, то тип аргумента CATALOG_FILEMASK
-
-        //не удалось определить тип аргумента
-        return ArgType.UNKNOWN;
+        // составление списка файлов по арг1.
+        // перемещение.
     }
 
     private static boolean isWindows() {
@@ -277,67 +131,4 @@ public class Main {
         }
         return OS;
     }
-
-    private static void create_path(String path) {
-        //проверить, существует ли указанный путь
-        File f = new File(path);
-        if ( f.exists() ) return;
-        //проверить возможность создания, если такой возможности нет? то завершить работу
-        if ( !f.canWrite() ) {
-            log.warning("catalog: "+f.getAbsolutePath() + " is write protected");
-            return;
-        } else {
-            //создатть директорию.
-            if (f.mkdir()) {
-                log.info("calog: " + f.getAbsolutePath() + " created");
-            } else {
-                log.warning("cannot create " + f.getAbsolutePath());
-            }
-        }
-    }
-/*
-    private static void move_file(String oldFullName, String newFullName) {
-        //перемещаю как копирование + удаление.
-        //проверяю наличие нового пути и копирую. Функция предназначена для копирования только 1го файла за раз.
-        File oldName = new File(oldFullName);
-        File newName = new File(newFullName);
-        File newFileCatalog = newName.getParentFile();
-
-        if ( newFileCatalog.exists() && newFileCatalog.isDirectory() ) {
-            if ( ! oldName.exists()) {
-                log.warning("path "+oldName.getAbsolutePath()+ " not exists");
-                return;
-            }
-        } else {
-            log.warning("path: " + newFileCatalog.toString() + " not exists or this is not directory ");
-            return;
-        }
-
-        //copy file
-        //копирую по байтам. В планах добавить отображение прогресса.
-        FileInputStream fileInput = null;
-        FileOutputStream fileOutput = null;
-        int aval = 0;
-        int b = 0;
-        try {
-             fileInput = new FileInputStream(oldName);
-             fileOutput = new FileOutputStream(newName,true);
-             aval = fileInput.available();
-
-            while ( (b=fileInput.read()) !=-1 ) {
-                  fileOutput.write(b);
-            }
-            fileOutput.flush();
-            fileOutput.close();
-            fileInput.close();
-        } catch (FileNotFoundException e) {
-            log.warning("file: " + oldName.getName() + " not found");
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
- */
 }
