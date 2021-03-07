@@ -140,10 +140,23 @@ public class Main {
                         break;
                     }
                     case CATALOG_FILEMASK: {
+                        file1 = new File(arg2);
+                        file2 = new File(arg3);
+                        while (!file1.exists()) {
+                            file1 = new File(file1.getParent());
+                        }
+                        //вычисляю маску
+                        int delta = arg2.compareTo(file1.getPath());
+                        String mask = arg2.substring( arg2.length()-delta+1,arg2.length() );
 
+                        System.out.println("work path: " + file1.getPath());
+                        System.out.println("mask: " + mask);
+                        addFileInFileLists(file1);
+                        for (File tmp : fileList) {
+                            tmp.renameTo(new File(file2.getAbsolutePath()+separator+tmp.getName()));
+                        }
                     }
                 }
-
             }
         }
         // составление списка файлов по арг1.
@@ -223,6 +236,16 @@ public class Main {
         } else {
             target = new File(target.getParent());
             return target.exists();
+        }
+    }
+
+    private static void addFileInFileLists(File f) {
+        for (File tmp: f.listFiles()) {
+            if (tmp.isDirectory()) {
+                addFileInFileLists(f);
+            } else {
+                fileList.add(f);
+            }
         }
     }
 }
