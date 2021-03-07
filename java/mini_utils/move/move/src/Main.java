@@ -1,6 +1,7 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.FileInputStream;
@@ -50,7 +51,8 @@ public class Main {
         BACKUP,
         UPDATE,
         VERBOSE,
-        PRINTHELP
+        PRINTHELP,
+        CREATEPATH
     }
 
     public enum OSType {
@@ -63,7 +65,7 @@ public class Main {
     public enum ArgType {
         CATALOG, // аргумент - каталог,
         FILE,    // аргумент - файл
-        CATALOG_FILEMASK, // аргумент - несуществующее имя
+        CATALOG_FILEMASK, // аргумент - каталог + маска имён
         OPTION_STRING,    // аргумент - строка опций
         UNKNOWN           //аргумент -пустая строка, либо не определён.
     }
@@ -72,7 +74,7 @@ public class Main {
     public static String OS = null;
     public static Logger log = Logger.getLogger(Main.class.getName());
     public static WorkMode workMode = WorkMode.UNKNOW;
-    public static ArrayList<File> fileList = new ArrayList<>();
+    public static ArrayList<File> fileList = new ArrayList<>();  //коллекция файлов для перемещения
     public static OSType osType;
 
     public static void main (String[] args) {
@@ -81,12 +83,15 @@ public class Main {
         String separator = File.separatorChar + "";
         File[] disks = File.listRoots();
         String userName = System.getProperty("user.name");
-
         //   0. строка параметров для работы утилиты.
         //   1. что перемещаю(можно маску)
         //   2. куда перемещаю(файл, если 1 - одиночный файл. каталог, если 1 - маска файлов)
         //   анализ параметров. и настройка утилиты для работы.
-        
+        String arg1;
+        String arg2;
+        String arg3;
+        File file1; //перемещаемый файл, каталог, или группа файлов
+        File file2; //целевой каталог или файл
         switch (args.length) {
             case 0: return;
             case 1: {
@@ -95,11 +100,50 @@ public class Main {
             }
             case 2: {
                 //для 2х аргументов
+                arg1 = new String(args[0]);
+                arg2 = new String(args[1]);
+                //arg3 = new String(args[2]);
+                //ожидаю два аргумента: файл 1 и файл 2.
+                if ( arg1.toLowerCase(Locale.ROOT).substring(0) == "-" ) {
+                    return;
+                }
                 break;
+
             }
             case 3: {
                 //для 3х аргументов
-                break;
+                arg1 = new String(args[0]);
+                arg2 = new String(args[1]);
+                arg3 = new String(args[2]);
+                if (getArgType(arg1) == ArgType.OPTION_STRING) {
+                    if (arg1.toLowerCase(Locale.ROOT).substring(0) == "-") {
+                        setUseOption(arg1);
+                    }
+                } else {
+                    System.out.println("первым параметром должна идти строка с аргументами");
+                }
+                switch (getArgType(arg2)) {
+                    case CATALOG: {
+                        file1 = new File(arg2);
+                        file2 = new File(arg3);
+                        if (testPathForMove(file2)) {
+                            file1.renameTo(file2);
+                        }
+                        break;
+                    }
+                    case FILE: {
+                        file1 = new File(arg2);
+                        file2 = new File(arg3);
+                        if (testPathForMove(file2)) {
+                            file1.renameTo(file2);
+                        }
+                        break;
+                    }
+                    case CATALOG_FILEMASK: {
+
+                    }
+                }
+
             }
         }
         // составление списка файлов по арг1.
@@ -130,5 +174,55 @@ public class Main {
             OS = System.getProperty("os.name");
         }
         return OS;
+    }
+
+    private static void setUseOption(String srgStr) {
+
+        useOption.replace(Option.PRINTHELP,false);
+        useOption.replace(Option.UPDATE,false);
+        useOption.replace(Option.BACKUP,false);
+        useOption.replace(Option.VERBOSE,false);
+        useOption.replace(Option.INTERACTIVE,false);
+        useOption.replace(Option.FORCE,false);
+        useOption.replace(Option.CREATEPATH,false);
+    }
+
+    private static ArgType getArgType(String arg) {
+        ArgType result;
+        if (arg.toLowerCase().lastIndexOf('-') == 0) {
+            return ArgType.OPTION_STRING;
+        }
+        File f = new File(arg);
+        if (f.exists() && f.isDirectory()) {
+            return ArgType.CATALOG;
+        }
+
+        if (f.exists() && f.isFile()) {
+            return ArgType.FILE;
+        }
+        while ( !f.exists()) {
+            f = new File(f.getParent());
+        }
+        if (f.exists() && f.isDirectory()) {
+            return ArgType.CATALOG_FILEMASK;
+        } else {
+            return ArgType.UNKNOWN;
+        }
+    };
+    private static boolean testPathForMove(File target) {
+        /*
+        требования к конечному пути имени файла
+        Шаблон: /Реально_существующий_каталог/новое_имя
+                /Реально_существующий_каталог/существующее_имя
+        Ситуации: /реально_существующий_каталог/несуществующая_часть/новое_имя
+                  /несуществующий_путь/новое_имя
+        Вернут false.
+         */
+        if (target.exists())  {
+            return true;
+        } else {
+            target = new File(target.getParent());
+            return target.exists();
+        }
     }
 }
