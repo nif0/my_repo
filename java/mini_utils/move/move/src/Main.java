@@ -70,6 +70,19 @@ public class Main {
         UNKNOWN           //аргумент -пустая строка, либо не определён.
     }
 
+    static class FileFilter implements FilenameFilter {
+        private Pattern pattern;
+
+        public FileFilter(String regexp) {
+            pattern = Pattern.compile(regexp);
+        }
+
+        @Override
+        public boolean accept(File dir, String name) {
+            return pattern.matcher(name).matches();
+        }
+    };
+
     public static HashMap<Option,Boolean> useOption = new HashMap<>(5);
     public static String OS = null;
     public static Logger log = Logger.getLogger(Main.class.getName());
@@ -151,7 +164,8 @@ public class Main {
 
                         System.out.println("work path: " + file1.getPath());
                         System.out.println("mask: " + mask);
-                        addFileInFileLists(file1);
+                        FileFilter nameFilter = new FileFilter(mask);
+                        addFileInFileLists(file1, nameFilter);
                         for (File tmp : fileList) {
                             tmp.renameTo(new File(file2.getAbsolutePath()+separator+tmp.getName()));
                         }
@@ -222,6 +236,7 @@ public class Main {
             return ArgType.UNKNOWN;
         }
     };
+
     private static boolean testPathForMove(File target) {
         /*
         требования к конечному пути имени файла
@@ -239,10 +254,11 @@ public class Main {
         }
     }
 
-    private static void addFileInFileLists(File f) {
-        for (File tmp: f.listFiles()) {
+    private static void addFileInFileLists(File f, FileFilter filter) {
+
+        for (File tmp: f.listFiles(filter)) {
             if (tmp.isDirectory()) {
-                addFileInFileLists(f);
+                addFileInFileLists(f,filter);
             } else {
                 fileList.add(f);
             }
