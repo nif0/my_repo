@@ -119,6 +119,28 @@ public class Main {
                 //ожидаю два аргумента: файл 1 и файл 2.
                 if ( arg1.toLowerCase(Locale.ROOT).substring(0) == "-" ) {
                     return;
+                };
+                switch (getArgType(arg1)) {
+                    case CATALOG:
+                        file1 = new File(arg1);
+                        file2 = new File(arg2);
+                        if (testPathForMove(file2)) {
+                            file1.renameTo(file2);
+                        } else {
+                            System.out.println("перемещение не удалось");
+                            return;
+                        }
+                        break;
+                    case FILE:
+                        file1 = new File(arg1);
+                        file2 = new File(arg2);
+                        if (testPathForMove(file2)) {
+                            file1.renameTo(file2);
+                        } else {
+                            System.out.println("перемещение не удалось");
+                            return;
+                        }
+                        break;
                 }
                 break;
 
