@@ -96,7 +96,7 @@ public class Main {
         String separator = File.separatorChar + "";
         File[] disks = File.listRoots();
         String userName = System.getProperty("user.name");
-        //   0. строка параметров для работы утилиты.
+        //   0. строка с параметрами для работы утилиты.
         //   1. что перемещаю(можно маску)
         //   2. куда перемещаю(файл, если 1 - одиночный файл. каталог, если 1 - маска файлов)
         //   анализ параметров. и настройка утилиты для работы.
@@ -141,6 +141,33 @@ public class Main {
                             return;
                         }
                         break;
+                    case CATALOG_FILEMASK: {
+                        file1 = new File(arg1);
+                        file2 = new File(arg2);
+                        while (!file1.exists()) {
+                            file1 = new File(file1.getParent());
+                        }
+                        //выделяю маску
+                        int delta = arg1.compareTo(file1.getPath());
+                        String mask = arg1.substring( arg1.length()-delta,arg1.length() );
+                        System.out.println("work path: " + file1.getPath());
+                        System.out.println("mask: " + mask);
+                        FileFilter nameFilter = new FileFilter(mask);
+                        addFileInFileLists(file1, nameFilter);
+                        String newName;
+                        for (File tmp : fileList) {
+                             newName = file2.getAbsolutePath()+separator+tmp.getName();
+                             System.out.print("старое имя: ");
+                             System.out.println(tmp.getAbsolutePath());
+                             System.out.print("новое имя: ");
+                             System.out.println(newName);
+                             tmp.renameTo(new File(newName));
+                        }
+                        break;
+                    }
+                    case UNKNOWN: {
+                        System.out.println("путь: " + arg1 + " не существует");
+                    }
                 }
                 break;
 
@@ -180,10 +207,9 @@ public class Main {
                         while (!file1.exists()) {
                             file1 = new File(file1.getParent());
                         }
-                        //вычисляю маску
+                        //выделяю маску
                         int delta = arg2.compareTo(file1.getPath());
                         String mask = arg2.substring( arg2.length()-delta+1,arg2.length() );
-
                         System.out.println("work path: " + file1.getPath());
                         System.out.println("mask: " + mask);
                         FileFilter nameFilter = new FileFilter(mask);
@@ -282,7 +308,7 @@ public class Main {
             if (tmp.isDirectory()) {
                 addFileInFileLists(f,filter);
             } else {
-                fileList.add(f);
+                fileList.add(tmp);
             }
         }
     }
