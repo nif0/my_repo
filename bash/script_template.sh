@@ -6,6 +6,8 @@ PID_FILE;
 #в лог пишутся все возникающие сообщения(STDIN,STDOUT) кроме тех, что выводятся через write_log
 LOG_FILE;
 
+#максимальный размер в байтах
+MAX_LOG_SIZE;
 
 #переменная с уровнем печати отладочных сообщений отладки
 #уровень используется для скрытия/показа кастомных сообщений
@@ -72,7 +74,48 @@ function read_conf()
 #команды здесь выполняются 1 раз.
 function init() 
 {
-    
+    #читаю переданные параметры
+	#после совпадения с ключом делаю ещё 1 сдвиг, что бы прочитать значение.
+	while [ -n "$1" ]; 
+	do 
+	param=$1;
+	    case "$param" in 
+		-config) 
+		    shift;
+		    read_conf $1 ;;
+		-log) 
+		    shift;
+			LOG_FILE=$1 ;;
+		-pid)
+		    shift;
+			PID_FILE=$1 ;;
+		-instance)
+		    shift;
+			MAXIMUM_NUMBER_INSTANCES=$1 ;;
+		-log-size)
+		    shift;
+			s=$1;
+			len=$(expr length $s);
+			mask=$(expr match $s [0-9]*[GMKBb]$);
+			MAX_LOG_SIZE=${s:0:$len-1};
+			if [ $len -eq $mask ]; then 
+			    pref=${s:$len-1:$len};
+				#перевод в байты
+				case "$pref" in
+				    b) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE/8) ;;
+					B) MAX_LOG_SIZE=$MAX_LOG_SIZE ;;
+					K) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024) ;;
+					M) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024*1024) ;;
+					G) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024*1024*1024) ;;
+				esac;
+				unset pref;
+			fi;
+			unset s;
+            unset len;
+            unset mask;
+			;;
+		esac;
+	done;
 }
 
 #связывание процедур-обработчиков с событиями. Чтение конфиг-файла
@@ -90,6 +133,6 @@ function end_work()
     delete_pid_file();
 }
 
-init();
+init() $* ;
 main();
 end_work();
