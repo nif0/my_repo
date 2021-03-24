@@ -42,6 +42,7 @@ function read_conf()
     fi
 }
 
+
 function init()
 {
         while [ -n "$1" ];
