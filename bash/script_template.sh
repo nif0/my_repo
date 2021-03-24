@@ -71,10 +71,10 @@ function init()
                             pref=${s:$len-1:$len};
                                 case "$pref" in
                                     b) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE/8) ;;
-                                        B) MAX_LOG_SIZE=$MAX_LOG_SIZE ;;
-                                        K) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024) ;;
-                                        M) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024*1024) ;;
-                                        G) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024*1024*1024) ;;
+                                    B) MAX_LOG_SIZE=$MAX_LOG_SIZE ;;
+                                    K) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024) ;;
+                                    M) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024*1024) ;;
+                                    G) MAX_LOG_SIZE=$(math $MAX_LOG_SIZE*1024*1024*1024) ;;
                                 esac;
                                 unset pref;
                         fi;
