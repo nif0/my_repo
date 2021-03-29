@@ -5,6 +5,39 @@ package com.company;
   путь должен состоять из одного реально существующего корневого каталога и маски для фильтрации имён
   Например:
   F:\projects\ja[av]a\mini_ut?ls\ls\.*\\.*xml$"
+
+  поддерживаемые  короткие ключи
+  -R
+    Включить рекурсивную выдачу списка каталогов.
+  -d
+    Выдавать имена каталогов, как будто они обычные файлы, вместо того, чтобы показывать их содержимое.
+  -C
+    Напечатать список файлов в колонке с вертикальной сортировкой.
+  -t
+    Сортировать по показываемому временному штампу.
+  -l, --format=long, --format=verbose
+    В дополнении к имени каждого файла, выводятся тип файла, права доступа к файлу, количество ссылок на файл,
+    имя владельца, имя группы, размер файла в байтах и временной штамп (время последней модификации файла,
+    если не задано другое).
+  -a
+    выводит скрытые файлы
+  -h
+    печать справки и завершение работы
+  -H, --human-readable
+    Добавлять к каждому размеру файла букву размера, например, M для двоичных мегабайт (`мебибайт')
+  -si
+    Делает то же, что и опция -h, но использует официальные единицы измерения
+    SI (где для расчетов используется 1000 вместо 1024 и, таким образом, M -- это 1000000 вместо 10485576)
+
+  длинные ключи
+  --sort=field
+     сортирует вывод по полю filed
+  --column-separate
+    разделитель столбцов. По умолчанию это символ табуляции.
+  --max-depth=N
+    максимальная глуина рекурсиии при включенном флаге R.
+
+
 */
 
 import java.io.File;
@@ -28,6 +61,7 @@ import java.nio.file.Files;
 }
 
 public class Main {
+     //свойства файлов, доступные для отображения на экране
     private static enum FilePropertyNames {
         PARENT,      //parent folder
         ABSPATH,     // absolute path
@@ -37,14 +71,61 @@ public class Main {
         TOTALSPACE,
         USABLESPACE,
         HASHCODE,
-        EXECUTE,
+        EXECUTE,   //executable flag
         //атрибуты файла
         WRITEF,     // доступ на запись
         READF,      // доступ на чтение
         HIDDENF,    // скрытый
         LMTIME,      // last modify time
-        OWNER
+        OWNER;
+        @Override
+        public String toString()  {
+            switch (this) {
+                case PARENT: return "parent";
+                case ABSPATH: return "fullpath";
+                case FILENAME: return "name";
+                case FREESPACE: return "freespace";
+                case TOTALSPACE: return "totalspace";
+                case USABLESPACE: return "usespace";
+                case HASHCODE: return "hashcode";
+                case EXECUTE: return "execute";
+                case WRITEF: return "write";
+                case READF: return "read";
+                case HIDDENF: return "hidde";
+                case LMTIME: return "lmtime";
+                case OWNER: return "owner";
+                default: throw new IllegalArgumentException();
+            }
+        }
     }
+    //параметры работы программы.
+    private static enum ProgramPropertyNames {
+        RECURSIVE,
+        DEBUG,
+        PRINTHIDDEN,
+        HUMANREADABLEFORMAT,
+        SIFORMAT,
+        ONECOLUMN,
+        PRINTHELP,
+        LONGFORMAT;
+
+        @Override
+        public String toString() {
+            switch(this) {
+                case RECURSIVE: return "R";
+                case DEBUG: return "D";
+                case PRINTHIDDEN: return "a";
+                case HUMANREADABLEFORMAT: return "H";
+                case SIFORMAT: return "si";
+                case ONECOLUMN: return "1";
+                case PRINTHELP: return "h";
+                case LONGFORMAT: return "l";
+                default: throw new IllegalArgumentException();
+            }
+        }
+    }
+
+    private static FilePropertyNames sortField = null;
 
     private static Map<FilePropertyNames,Boolean> printProperty = new HashMap<>();
 
@@ -151,7 +232,7 @@ public class Main {
         File[] tmp;
         tmp = file.listFiles();
         for (File f: tmp
-             ) {
+            ) {
             if (f.isDirectory()) {
                 addAllFilesInList(f);
                 fileAList.add(f);
@@ -160,6 +241,10 @@ public class Main {
             }
         }
     };
+
+    private static void prepareFlagString(String flags) {
+
+    }
 
 
     public static void main(String[] args)  {
