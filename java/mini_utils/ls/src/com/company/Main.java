@@ -333,11 +333,12 @@ public class Main {
         if (isDebug()) {
             System.out.println("test regexp: " + longKeyTest.toString());
         }
-        //отбрасываю повторяющиеся символы. -- сократится до -
-        String uniq_string = flags.chars().distinct().toString();
+        String uniq_string = flags;
         Matcher keyTestMatcher = keyTest.matcher(uniq_string);
-        //Matcher longKeyTestMatcher = longKeyTest.matcher(uniq_string);
+        //для строки с короткими ключами
         if (keyTestMatcher.matches() ) {
+            //удаляю повторы и включаю нужные флаги
+            uniq_string = flags.chars().distinct().toString();
             for (char ch : uniq_string.toCharArray()) {
                 switch (ch) {
                     case keyNames.DEBUG.toChar(): programKey.put(keyNames.DEBUG,Boolean.TRUE.toString()); break;
@@ -345,14 +346,27 @@ public class Main {
                     case keyNames.LONGFORMAT.toChar(): programKey.put(keyNames.LONGFORMAT,Boolean.TRUE.toString());  break;
                     case keyNames.NOSHOWCATALOG.toChar(): programKey.put(keyNames.NOSHOWCATALOG,Boolean.TRUE.toString());  break;
                     case keyNames.ONECOLUMN.toChar() : programKey.put(keyNames.ONECOLUMN,Boolean.TRUE.toString()); break;
-                    case keyNames.PRINTHELP.toChar(): programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString();  break;
+                    case keyNames.PRINTHELP.toChar(): programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString());  break;
                     case keyNames.PRINTHIDDEN.toChar(): programKey.put(keyNames.PRINTHIDDEN,Boolean.TRUE.toString());  break;
                     case keyNames.RECURSIVE.toChar(): programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());  break;
                 }
             }
+            return;
         }
-
-
+        //для строки с длинными ключами
+        Matcher longKeyTestMatcher = longKeyTest.matcher(uniq_string);
+        if (longKeyTestMatcher.matches()) {
+            uniq_string = uniq_string.replace("-","");
+           // uniq_string.
+            String paramName = uniq_string.substring(0,uniq_string.indexOf("="));
+            String value = uniq_string.substring(uniq_string.indexOf("=")+1,uniq_string.length());
+            switch (paramName.toString()) {
+                case keyNames.COLUMNSEPARATE.toString() : programKey.put(keyNames.COLUMNSEPARATE,value); break;
+                case keyNames.SORTBYFIELD.toString(): programKey.put(keyNames.SORTBYFIELD,value); break;
+                case keyNames.MAXDEPTH.toString(): programKey.put(keyNames.MAXDEPTH,value); break;
+                default: return;
+            }
+        }
     }
 
 
