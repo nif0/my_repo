@@ -2,11 +2,17 @@ package com.company;
 
 /*
   выводит список файлов и каталогов в указанной директории. Можно использовать маски для фильтрации имён.
-  путь должен состоять из одного реально существующего корневого каталога и маски для фильтрации имён
+  путь должен состоять из одного реально существующего корневого каталога и маски для фильтрации имён.
+  Первымb идут ключи. Затем имя каталога и маска.
   Например:
   F:\projects\ja[av]a\mini_ut?ls\ls\.*\\.*xml$"
+  Если указаны ключи(пример):
+   -Rdc --max-depth=5 F:\projects\ja[av]a\mini_ut?ls\ls\.*\\.*xml$"
+  то имя файла должно
 
   поддерживаемые  короткие ключи
+  -D
+    включить вывод отладочной информации при работе утилиты.
   -R
     Включить рекурсивную выдачу списка каталогов.
   -d
@@ -42,12 +48,11 @@ package com.company;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.text.DateFormat;
 import java.util.*;
 import java.util.regex.*;
-import java.nio.file.Files;
+import java.util.stream.Stream;
 
- class DirFilter implements  FilenameFilter{
+class DirFilter implements  FilenameFilter{
     private Pattern pattern;
 
     public DirFilter (String regexp) {
@@ -98,8 +103,8 @@ public class Main {
             }
         }
     }
-    //параметры работы программы.
-    private static enum ProgramPropertyNames {
+    //короткие ключи программы.
+    private static enum keyNames {
         RECURSIVE,
         DEBUG,
         PRINTHIDDEN,
@@ -107,29 +112,83 @@ public class Main {
         SIFORMAT,
         ONECOLUMN,
         PRINTHELP,
-        LONGFORMAT;
+        LONGFORMAT,
+        NOSHOWCATALOG,
+
+        SORTBYFIELD,
+        COLUMNSEPARATE,
+        MAXDEPTH;
+
+        public static Stream<keyNames> getStream() {
+            return Stream.of(keyNames.values());
+        }
 
         @Override
         public String toString() {
             switch(this) {
+
                 case RECURSIVE: return "R";
                 case DEBUG: return "D";
                 case PRINTHIDDEN: return "a";
                 case HUMANREADABLEFORMAT: return "H";
-                case SIFORMAT: return "si";
+                case SIFORMAT: return "s";
                 case ONECOLUMN: return "1";
                 case PRINTHELP: return "h";
                 case LONGFORMAT: return "l";
+                case NOSHOWCATALOG: return "d";
+                case MAXDEPTH: return "max-depth";
+                case COLUMNSEPARATE: return "column-separate";
+                case SORTBYFIELD: return "sort";
+                default: throw new IllegalArgumentException();
+            }
+        }
+
+        public char toChar() {
+            switch(this) {
+                case RECURSIVE: return 'R';
+                case DEBUG: return 'D';
+                case PRINTHIDDEN: return 'a';
+                case HUMANREADABLEFORMAT: return 'H';
+                case SIFORMAT: return 's';
+                case ONECOLUMN: return '1';
+                case PRINTHELP: return 'h';
+                case LONGFORMAT: return 'l';
+                case NOSHOWCATALOG: return 'd';
                 default: throw new IllegalArgumentException();
             }
         }
     }
 
+    private static enum LongKeyNames{
+        SORTBYFIELD,
+        COLUMNSEPARATE,
+        MAXDEPTH;
+
+        @Override
+        public String toString() {
+            switch (this) {
+                case MAXDEPTH: return "max-depth";
+                case COLUMNSEPARATE: return "column-separate";
+                case SORTBYFIELD: return "sort";
+            }
+        }
+        public static Stream<LongKeyNames> getStream() {
+            return Stream.of(LongKeyNames.values());
+        }
+    }
+
+    private static boolean debug = true;
+
     private static FilePropertyNames sortField = null;
 
     private static Map<FilePropertyNames,Boolean> printProperty = new HashMap<>();
+    private static Map<keyNames,String> programKey = new HashMap<>();
 
     static ArrayList<File> fileAList = new ArrayList<File>();
+
+    private static boolean isDebug() {
+        return debug;
+    }
 
     private static void printFileProperty(File f) {
         StringBuilder result = new StringBuilder();
@@ -242,7 +301,57 @@ public class Main {
         }
     };
 
-    private static void prepareFlagString(String flags) {
+
+
+    private static void prepareKeyString(String flags) {
+        /*
+            строка с ключами состоит из начального дефиса и букв-параметров.
+                Например: -DRaH
+            также используются длинные ключи-параметры.
+                Пример: --max-depth=5 устанавливает максимальную глубину рекурсивного обхода каталогов равным 5
+             таких ключей в строке может быть несколько.
+             В этом случае они перечисляются через пробел.
+                Пример:
+             -DRaH --sort=field --column-separate --max-depth=N
+             В массиве args[] эта строка займёт 4 ячейки.
+         */
+        /*
+          Вначале проверить, что переданная строка - набор ключей и параметров.
+          заполнить массивы.
+         */
+        //проверка на соответствие.
+        // Должно начинаться с - или --
+        String test = flags.substring(0,2);
+        if (isDebug()) {
+            System.out.println(test);
+        }
+        Pattern keyTest = Pattern.compile("^[-]["+ keyNames.getStream().toString()+"]*");
+        if (isDebug()){
+            System.out.println("test regexp: "+keyTest.toString());
+        }
+        Pattern longKeyTest = Pattern.compile("^[--]"+ "["+ LongKeyNames.getStream().toString()+"]");
+        if (isDebug()) {
+            System.out.println("test regexp: " + longKeyTest.toString());
+        }
+        //отбрасываю повторяющиеся символы. -- сократится до -
+        String uniq_string = flags.chars().distinct().toString();
+        Matcher keyTestMatcher = keyTest.matcher(uniq_string);
+        //Matcher longKeyTestMatcher = longKeyTest.matcher(uniq_string);
+        if (keyTestMatcher.matches() ) {
+            for (char ch : uniq_string.toCharArray()) {
+                switch (ch) {
+                    case keyNames.DEBUG.toChar(): programKey.put(keyNames.DEBUG,Boolean.TRUE.toString()); break;
+                    case keyNames.HUMANREADABLEFORMAT.toChar(): programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.TRUE.toString());  break;
+                    case keyNames.LONGFORMAT.toChar(): programKey.put(keyNames.LONGFORMAT,Boolean.TRUE.toString());  break;
+                    case keyNames.NOSHOWCATALOG.toChar(): programKey.put(keyNames.NOSHOWCATALOG,Boolean.TRUE.toString());  break;
+                    case keyNames.ONECOLUMN.toChar() : programKey.put(keyNames.ONECOLUMN,Boolean.TRUE.toString()); break;
+                    case keyNames.PRINTHELP.toChar(): programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString();  break;
+                    case keyNames.PRINTHIDDEN.toChar(): programKey.put(keyNames.PRINTHIDDEN,Boolean.TRUE.toString());  break;
+                    case keyNames.RECURSIVE.toChar(): programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());  break;
+                }
+            }
+        }
+
 
     }
 
