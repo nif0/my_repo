@@ -3,12 +3,12 @@ package com.company;
 /*
   выводит список файлов и каталогов в указанной директории. Можно использовать маски для фильтрации имён.
   путь должен состоять из одного реально существующего корневого каталога и маски для фильтрации имён.
-  Первымb идут ключи. Затем имя каталога и маска.
+  Первыми идут ключи. Затем имя каталога и маска.
   Например:
   F:\projects\ja[av]a\mini_ut?ls\ls\.*\\.*xml$"
   Если указаны ключи(пример):
    -Rdc --max-depth=5 F:\projects\ja[av]a\mini_ut?ls\ls\.*\\.*xml$"
-  то имя файла должно
+  то имя пути должно идти в конце
 
   поддерживаемые  короткие ключи
   -D
@@ -166,11 +166,13 @@ public class Main {
 
         @Override
         public String toString() {
+            String result = null;
             switch (this) {
-                case MAXDEPTH: return "max-depth";
-                case COLUMNSEPARATE: return "column-separate";
-                case SORTBYFIELD: return "sort";
+                case MAXDEPTH: result = "max-depth";
+                case COLUMNSEPARATE: result = "column-separate";
+                case SORTBYFIELD: result = "sort";
             }
+            return result;
         }
         public static Stream<LongKeyNames> getStream() {
             return Stream.of(LongKeyNames.values());
@@ -301,6 +303,19 @@ public class Main {
         }
     };
 
+    private static boolean isParam(String arg) {
+        boolean result = false;
+        String a = arg.substring(0,1);
+        if ( a.equals("-") ) {
+            File f = new File(arg);
+            if (f.exists()) {
+                result = false;
+            }
+            result = true;
+        }
+        return result;
+    }
+
 
 
     private static void prepareKeyString(String flags) {
@@ -340,16 +355,14 @@ public class Main {
             //удаляю повторы и включаю нужные флаги
             uniq_string = flags.chars().distinct().toString();
             for (char ch : uniq_string.toCharArray()) {
-                switch (ch) {
-                    case keyNames.DEBUG.toChar(): programKey.put(keyNames.DEBUG,Boolean.TRUE.toString()); break;
-                    case keyNames.HUMANREADABLEFORMAT.toChar(): programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.TRUE.toString());  break;
-                    case keyNames.LONGFORMAT.toChar(): programKey.put(keyNames.LONGFORMAT,Boolean.TRUE.toString());  break;
-                    case keyNames.NOSHOWCATALOG.toChar(): programKey.put(keyNames.NOSHOWCATALOG,Boolean.TRUE.toString());  break;
-                    case keyNames.ONECOLUMN.toChar() : programKey.put(keyNames.ONECOLUMN,Boolean.TRUE.toString()); break;
-                    case keyNames.PRINTHELP.toChar(): programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString());  break;
-                    case keyNames.PRINTHIDDEN.toChar(): programKey.put(keyNames.PRINTHIDDEN,Boolean.TRUE.toString());  break;
-                    case keyNames.RECURSIVE.toChar(): programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());  break;
-                }
+                if  (ch == keyNames.DEBUG.toChar()) programKey.put(keyNames.DEBUG,Boolean.TRUE.toString());
+                if  (ch == keyNames.HUMANREADABLEFORMAT.toChar()) programKey.put(keyNames.DEBUG,Boolean.TRUE.toString());
+                if  (ch == keyNames.LONGFORMAT.toChar()) programKey.put(keyNames.LONGFORMAT,Boolean.TRUE.toString());
+                if  (ch == keyNames.NOSHOWCATALOG.toChar() ) programKey.put(keyNames.NOSHOWCATALOG,Boolean.TRUE.toString());
+                if  (ch == keyNames.ONECOLUMN.toChar() ) programKey.put(keyNames.ONECOLUMN,Boolean.TRUE.toString());
+                if  (ch == keyNames.PRINTHELP.toChar() ) programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString());
+                if  (ch == keyNames.PRINTHIDDEN.toChar() ) programKey.put(keyNames.PRINTHIDDEN,Boolean.TRUE.toString());
+                if  (ch == keyNames.RECURSIVE.toChar() ) programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());
             }
             return;
         }
@@ -360,12 +373,9 @@ public class Main {
            // uniq_string.
             String paramName = uniq_string.substring(0,uniq_string.indexOf("="));
             String value = uniq_string.substring(uniq_string.indexOf("=")+1,uniq_string.length());
-            switch (paramName.toString()) {
-                case keyNames.COLUMNSEPARATE.toString() : programKey.put(keyNames.COLUMNSEPARATE,value); break;
-                case keyNames.SORTBYFIELD.toString(): programKey.put(keyNames.SORTBYFIELD,value); break;
-                case keyNames.MAXDEPTH.toString(): programKey.put(keyNames.MAXDEPTH,value); break;
-                default: return;
-            }
+                if (paramName.toString().equals(keyNames.COLUMNSEPARATE.toString()) ) programKey.put(keyNames.COLUMNSEPARATE, value);
+                if (paramName.toString().equals(keyNames.SORTBYFIELD.toString()) ) programKey.put(keyNames.SORTBYFIELD,value);
+                if (paramName.toString().equals(keyNames.MAXDEPTH.toString()) ) programKey.put(keyNames.MAXDEPTH,value);
         }
     }
 
@@ -386,11 +396,11 @@ public class Main {
         printProperty.put(FilePropertyNames.USABLESPACE,false);
         printProperty.put(FilePropertyNames.WRITEF,false);
 	//условие досрочного завершения.
-        if (args == null || args.length > 1 || args.length == 0) {
+        if (args == null || args.length == 0) {
             return;
         }
         String param = args[0];
-        File file = new File(param);
+        File file;// = new File(param);
 
         LinkedList listFiles;
         /*
@@ -398,20 +408,29 @@ public class Main {
         and eventually expect a file object with the existing path (part of the param string).
         the rest of the line will be read as a mask
         */
-
-        while (!file.exists()) {
-            file = new File(file.getParent());
+        int i = 0;
+        while (isParam(args[i])) {
+             prepareKeyString(args[i]);
+             i++;
         }
+        if (i >= args.length) return;
+
+        file = new File(args[i]);
+            while (!file.exists()) {
+                file = new File(file.getParent());
+            }
+
+
         /*
              it is quite strange to use the compare method to determine the position of the mask
              but the characters in the strings are the same. In this case, compare returns
              the difference between the string for which I call the method and the string with which I compare it.
              And in the case of param. compareTo (file.getPath ())
              of line 2 is a subset of line 1.
-             I haven't figured out why lastIndex and indexOf return 0 in the result yet.
+             I haven't fisgured out why lastIndex and indexOf return 0 in the result yet.
         */
-        int delta = param.compareTo(file.getPath());
-        String mask = param.substring(param.length()-delta+1,param.length());
+        int delta = args[i].compareTo(file.getPath());
+        String mask = args[i].substring(args[i].length()-delta+1,args[i].length());
         addAllFilesInList(file);
 
         for (File f: fileAList
