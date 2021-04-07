@@ -134,7 +134,7 @@ public class Main {
                 case RECURSIVE: return "R";
                 case DEBUG: return "D";
                 case PRINTHIDDEN: return "a";
-                case HUMANREADABLEFORMAT: return "H";
+                case HUMANREADABLEFORMAT: return "human-readable";
                 case SIFORMAT: return "s";
                 case ONECOLUMN: return "с";
                 case PRINTHELP: return "h";
@@ -235,21 +235,38 @@ public class Main {
         }
     }
 
-    private static String toHumanReadableFormat(int size) {
+    private static String toHumanReadableFormat(float size) {
         String byte_pref = "B";
         String mbyte_pref = "M";
         String kbyte_pref = "K";
         String res = null;
+        float _size = size;
         //in Kb
-        if (size < 1024) res = Float.toString(size)+"B";
-        float result = size / 1024;
+        if (_size < 1024) {
+        //    res = Float.toString(_size)+"B";
+            res = String.format("%10.3s",_size) + "B";
+            return res;
+        }
+        _size = _size / 1024;
         //in Mb
-        if (size < 1024) res = Float.toString(size) + "KB";
-         result = size / 1024;
+        if (size < 1024) {
+            //res = Float.toString(_size) + "KB";
+            res = String.format("%10.3s",_size) + "KB";
+            return res;
+        }
+         _size = _size / 1024;
         //in Gb
-        if (size < 1024) res = Float.toString(size) + "MB";
-         result = size / 1024;
-        if (size < 1024) res =  Float.toString(size) + "GB";
+        if (_size < 1024) {
+            //res = Float.toString(_size) + "MB";
+            res = String.format("%10.3s",_size) + "MB";
+            return res;
+        }
+         _size = _size / 1024;
+        if (_size < 1024) {
+            //res =  Float.toString(_size) + "GB";
+            res = String.format("%10.3s",_size)+ "GB";
+            return res;
+        }
         return  res;
     }
 
@@ -262,8 +279,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.TYPE)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.TYPE);
-                result.append(( f.isDirectory()  ? "d" : "f" ) + programKey.get(keyNames.COLUMNSEPARATE));
+                result.append((f.isDirectory()  ? "d" : "f" ) + programKey.get(keyNames.COLUMNSEPARATE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -272,30 +288,32 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.ABSPATH)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.ABSPATH);
-                result.append(f.getAbsolutePath() + programKey.get(keyNames.COLUMNSEPARATE));
+                result.append(programKey.get(keyNames.COLUMNSEPARATE));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.PARENT)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.PARENT);
+                formatString = String.format(formatString,columnFormat.get(FilePropertyNames.PARENT));
                 result.append(f.getParent() + programKey.get(keyNames.COLUMNSEPARATE));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.FILENAME)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.FILENAME);
+                formatString =  columnFormat.get(FilePropertyNames.FILENAME);
                 result.append(f.getName() + programKey.get(keyNames.COLUMNSEPARATE));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.CANPATH)) {
                 i++;
@@ -305,6 +323,7 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.FREESPACE)) {
                 i++;
@@ -314,24 +333,31 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.TOTALSPACE)) {
                 i++;
-                formatString += columnFormat.get(FilePropertyNames.TOTALSPACE);
-                result.append(f.getTotalSpace() + programKey.get(keyNames.COLUMNSEPARATE));
+                formatString = columnFormat.get(FilePropertyNames.TOTALSPACE);
+                result.append(String.format(formatString,f.getTotalSpace()) + programKey.get(keyNames.COLUMNSEPARATE));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.USABLESPACE)) {
                 i++;
                 formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.USABLESPACE);
-                result.append(f.length() + programKey.get(keyNames.COLUMNSEPARATE));
+                if (programKey.get(keyNames.HUMANREADABLEFORMAT).equals(Boolean.TRUE.toString())) {
+                    result.append(toHumanReadableFormat( f.length()) + programKey.get(keyNames.COLUMNSEPARATE));
+                } else {
+                    result.append(f.length() + programKey.get(keyNames.COLUMNSEPARATE));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.HASHCODE)) {
                 i++;
@@ -341,6 +367,7 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.EXECUTE)) {
                 i++;
@@ -350,6 +377,7 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.WRITEF)) {
                 i++;
@@ -359,6 +387,7 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.READF)) {
                 i++;
@@ -368,6 +397,7 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.TYPE)) {
                 i++;
@@ -377,6 +407,7 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         try {
             if (printProperty.get(FilePropertyNames.LMTIME)) {
                 i++;
@@ -397,17 +428,23 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
         //DateFormat.
         //String[] subs;
         //System.out.println(result.substring(0));
         if (isDebug()) {
-            System.out.println(formatString);
-            System.out.println(result.substring(0));
+         //   System.out.println(formatString);
+         //   System.out.println(result.substring(0));
         }
+        /*
         for (String str : result.substring(0).split(" ")) {
             System.out.format("%30s",str);
         }
+
+         */
         // System.out.format(formatString,result.substring(0));
+        System.out.println(result.substring(0));
     }
 
 
@@ -423,7 +460,9 @@ public class Main {
                 fileAList.add(f);
             } else {
                 if (programKey.get(keyNames.NOSHOWCATALOG).equals(Boolean.FALSE.toString())) {
-                    fileAList.add(f);
+                    if (!f.isHidden()  || programKey.get(keyNames.PRINTHIDDEN).equals(Boolean.TRUE.toString())) {
+                        fileAList.add(f);
+                    }
                 }
             }
         }
@@ -462,15 +501,17 @@ public class Main {
          */
         //проверка на соответствие.
         // Должно начинаться с - или --
-        String test = flags.substring(0,2);
+        //String test = flags.substring(0,2);
+        /*
         if (isDebug()) {
             System.out.println(test);
         }
+         */
         Pattern keyTest = Pattern.compile("^[-]["+ keyNames.getStream().toString()+"]*");
         if (isDebug()){
             System.out.println("test regexp: "+keyTest.toString());
         }
-        Pattern longKeyTest = Pattern.compile("^[--]"+ "["+ LongKeyNames.getStream().toString()+"]");
+        Pattern longKeyTest = Pattern.compile("(--)"+ "["+ LongKeyNames.getStream().toString()+"]");
         if (isDebug()) {
             System.out.println("test regexp: " + longKeyTest.toString());
         }
@@ -486,6 +527,7 @@ public class Main {
                     programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.TRUE.toString());
                 if  (ch == keyNames.LONGFORMAT.toChar()) {
                     programKey.put(keyNames.LONGFORMAT,Boolean.TRUE.toString());
+                    printProperty.put(FilePropertyNames.TYPE,Boolean.TRUE);
                     printProperty.put(FilePropertyNames.FILENAME,Boolean.TRUE);
                     printProperty.put(FilePropertyNames.USABLESPACE,Boolean.TRUE);
                     printProperty.put(FilePropertyNames.LMTIME,Boolean.TRUE);
@@ -505,16 +547,36 @@ public class Main {
                 if  (ch == keyNames.PRINTHIDDEN.toChar() ) programKey.put(keyNames.PRINTHIDDEN,Boolean.TRUE.toString());
                 if  (ch == keyNames.RECURSIVE.toChar() ) programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());
             }
-            return;
+            //return;
         }
         //для строки с длинными ключами
         Matcher longKeyTestMatcher = longKeyTest.matcher(uniq_string);
-        if (longKeyTestMatcher.matches()) {
-            uniq_string = uniq_string.replace("-","");
+
+        if (uniq_string.substring(0,2).equals("--")) {
+            uniq_string = uniq_string.replace("--","");
            // uniq_string.
-            String paramName = uniq_string.substring(0,uniq_string.indexOf("="));
-            String value = uniq_string.substring(uniq_string.indexOf("=")+1,uniq_string.length());
-                if (paramName.toString().equals(keyNames.COLUMNSEPARATE.toString()) ) {
+            String paramName = "";
+            int signEqualsPosition =  uniq_string.indexOf("=");
+            try {
+                if (signEqualsPosition > 0) {
+                    paramName = uniq_string.substring(0, signEqualsPosition);
+                } else {
+                    paramName = uniq_string.substring(0);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            String value = "";
+            try {
+                if (signEqualsPosition > 0) {
+                    value = uniq_string.substring(signEqualsPosition + 1, uniq_string.length());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (paramName.toString().equals(keyNames.COLUMNSEPARATE.toString()) ) {
                     programKey.put(keyNames.COLUMNSEPARATE, value);
                 }
                 if (paramName.toString().equals(keyNames.SORTBYFIELD.toString()) ) {
@@ -523,6 +585,10 @@ public class Main {
                 if (paramName.toString().equals(keyNames.MAXDEPTH.toString()) ) {
                     programKey.put(keyNames.MAXDEPTH,value);
                 }
+                if (paramName.toString().equals(keyNames.HUMANREADABLEFORMAT.toString())) {
+                    programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.TRUE.toString());
+                }
+
         }
     }
 
@@ -581,6 +647,7 @@ public class Main {
         programKey.put(keyNames.RECURSIVE,Boolean.FALSE.toString());
         programKey.put(keyNames.MAXDEPTH,String.valueOf(5));
         programKey.put(keyNames.COLUMNSEPARATE,"\t");
+        programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.FALSE.toString());
 	//условие досрочного завершения.
         if (args == null || args.length == 0) {
             return;
