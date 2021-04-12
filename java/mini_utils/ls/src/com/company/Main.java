@@ -21,7 +21,7 @@ package com.company;
     Напечатать список файлов в колонке с вертикальной сортировкой. Если есть ключ --sort=field, то сортировка
     идёт по полю field. Иначе, сортировка идёт по первому столбцу с именем файла.
   -t
-    Сортировать по показываемому временному штампу.
+    Сортировать по показываемому временному штампу(mtime).
   -l, --format=long, --format=verbose
     В дополнении к имени каждого файла, выводятся тип файла, права доступа к файлу, количество ссылок на файл,
     имя владельца, имя группы, размер файла в байтах и временной штамп (время последней модификации файла,
@@ -32,7 +32,7 @@ package com.company;
     печать справки и завершение работы
   -H, --human-readable
     Добавлять к каждому размеру файла букву размера, например, M для двоичных мегабайт (`мебибайт')
-  -si
+  -s(i)
     Делает то же, что и опция -h, но использует официальные единицы измерения
     SI (где для расчетов используется 1000 вместо 1024 и, таким образом, M -- это 1000000 вместо 10485576)
 
@@ -47,6 +47,7 @@ package com.company;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -279,7 +280,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.TYPE)) {
                 i++;
-                result.append((f.isDirectory()  ? "d" : "f" ) + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.TYPE),getFileProperty(f,FilePropertyNames.TYPE));
+                //result.append(getFileProperty(f,FilePropertyNames.TYPE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -288,7 +290,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.ABSPATH)) {
                 i++;
-                result.append(programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.ABSPATH),getFileProperty(f,FilePropertyNames.ABSPATH));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -297,8 +299,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.PARENT)) {
                 i++;
-                formatString = String.format(formatString,columnFormat.get(FilePropertyNames.PARENT));
-                result.append(f.getParent() + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.PARENT),getFileProperty(f,FilePropertyNames.PARENT));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -307,8 +308,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.FILENAME)) {
                 i++;
-                formatString =  columnFormat.get(FilePropertyNames.FILENAME);
-                result.append(f.getName() + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.FILENAME),getFileProperty(f,FilePropertyNames.FILENAME));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -317,8 +317,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.CANPATH)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.CANPATH);
-                result.append(f.getCanonicalPath() + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.CANPATH),getFileProperty(f,FilePropertyNames.CANPATH));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -327,8 +326,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.FREESPACE)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.FREESPACE);
-                result.append(f.getFreeSpace() + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.FREESPACE),getFileProperty(f,FilePropertyNames.FREESPACE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -337,8 +335,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.TOTALSPACE)) {
                 i++;
-                formatString = columnFormat.get(FilePropertyNames.TOTALSPACE);
-                result.append(String.format(formatString,f.getTotalSpace()) + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.TOTALSPACE),getFileProperty(f,FilePropertyNames.TOTALSPACE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -346,13 +343,9 @@ public class Main {
 
         try {
             if (printProperty.get(FilePropertyNames.USABLESPACE)) {
+                //String value =
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.USABLESPACE);
-                if (programKey.get(keyNames.HUMANREADABLEFORMAT).equals(Boolean.TRUE.toString())) {
-                    result.append(toHumanReadableFormat( f.length()) + programKey.get(keyNames.COLUMNSEPARATE));
-                } else {
-                    result.append(f.length() + programKey.get(keyNames.COLUMNSEPARATE));
-                }
+                System.out.format(columnFormat.get(FilePropertyNames.USABLESPACE),getFileProperty(f,FilePropertyNames.USABLESPACE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -361,8 +354,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.HASHCODE)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.HASHCODE);
-                result.append(f.hashCode() + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.HASHCODE),getFileProperty(f,FilePropertyNames.HASHCODE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -371,8 +363,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.EXECUTE)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.EXECUTE);
-                result.append((f.canExecute() ? "x" : "-")  + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.EXECUTE),getFileProperty(f,FilePropertyNames.EXECUTE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -381,8 +372,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.WRITEF)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.WRITEF);
-                result.append((f.canWrite() ? "w" : "-")  + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.WRITEF),getFileProperty(f,FilePropertyNames.WRITEF));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -391,18 +381,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.READF)) {
                 i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.READF);
-                result.append((f.canRead() ? "r": "-")  + programKey.get(keyNames.COLUMNSEPARATE));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            if (printProperty.get(FilePropertyNames.TYPE)) {
-                i++;
-                formatString +=  "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.TYPE);
-                result.append((f.isHidden())  + programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.READF),getFileProperty(f,FilePropertyNames.READF));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -411,9 +390,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.LMTIME)) {
                 i++;
-                formatString += "%" + Integer.toString(i)+"$"+ columnFormat.get(FilePropertyNames.LMTIME);
-                result.append(new Date(f.lastModified()).toLocaleString().replaceAll(" ",""));
-                result.append(programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.LMTIME),getFileProperty(f,FilePropertyNames.LMTIME));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -421,13 +398,12 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.OWNER)) {
                 i++;
-                formatString += "%" + Integer.toString(i)+"$"+columnFormat.get(FilePropertyNames.OWNER);
-                result.append(Files.getOwner(f.toPath(), LinkOption.NOFOLLOW_LINKS).toString().replaceAll(" ","_"));
-                result.append(programKey.get(keyNames.COLUMNSEPARATE));
+                System.out.format(columnFormat.get(FilePropertyNames.OWNER),getFileProperty(f,FilePropertyNames.OWNER));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        if (i > 0) System.out.format("\n");
 
 
         //DateFormat.
@@ -444,8 +420,10 @@ public class Main {
 
          */
         // System.out.format(formatString,result.substring(0));
-        System.out.println(result.substring(0));
+        //System.out.println(result.substring(0));
     }
+
+
 
 
     private static void addAllFilesInList(File file, int recurseLevel) {
@@ -588,8 +566,96 @@ public class Main {
                 if (paramName.toString().equals(keyNames.HUMANREADABLEFORMAT.toString())) {
                     programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.TRUE.toString());
                 }
-
         }
+    }
+
+    public static String getFileProperty(File f,  FilePropertyNames propertyName) {
+        String result = null;
+        if ( f == null) {
+            result = "";
+            return result;
+        }
+        switch (propertyName) {
+            case ABSPATH: {
+                if (f != null) {
+                    result = f.getAbsolutePath();
+                }
+                break;
+            }
+            case CANPATH: {
+                if (f != null) {
+                    try {
+                        result = f.getCanonicalPath();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
+            case TYPE: {
+                if (f != null) {
+                    //format = columnFormat.get()
+                    result = (f.isDirectory() ? "d" : "f");
+                }
+                break;
+            }
+            case OWNER: {
+                if (f != null) {
+                    try {
+                        result = Files.getOwner(f.toPath(), LinkOption.NOFOLLOW_LINKS).toString().replaceAll(" ","_");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
+            case READF: {
+                result = String.format(f.canRead() ? "r" : "-");
+                break;
+            }
+            case LMTIME: {
+                result = String.format(Long.toString(f.lastModified()));
+                break;
+            }
+            case PARENT: {
+                result = String.format(f.getParent());
+                break;
+            }
+            case WRITEF: {
+                result = String.format(f.canWrite() ? "w":"-");
+                break;
+            }
+            case EXECUTE: {
+                result = String.format(f.canExecute() ? "x":"-");
+                break;
+            }
+            case HIDDENF: {
+                result = String.format(f.isHidden() ? "h":"-");
+                break;
+            }
+            case FILENAME: {
+                result = String.format(f.getName());
+                break;
+            }
+            case HASHCODE: {
+                result = String.format(Integer.toString(f.hashCode()));
+                break;
+            }
+            case FREESPACE: {
+                result = String.format(Long.toString(f.getFreeSpace()));
+                break;
+            }
+            case TOTALSPACE: {
+                result = String.format(Long.toString(f.getTotalSpace()));
+                break;
+            }
+            case USABLESPACE: {
+                result = String.format(Long.toString(f.getUsableSpace()));
+                break;
+            }
+            default: result = "";
+        }
+        return result;
     }
 
 
@@ -606,7 +672,7 @@ public class Main {
         printFilePropertyOrder.add(FilePropertyNames.PARENT);
 
         printProperty.put(FilePropertyNames.ABSPATH,false);
-        printProperty.put(FilePropertyNames.FILENAME,false);
+        printProperty.put(FilePropertyNames.FILENAME,true);
         printProperty.put(FilePropertyNames.CANPATH,false);
         printProperty.put(FilePropertyNames.EXECUTE,false);
         printProperty.put(FilePropertyNames.FREESPACE,false);
@@ -619,23 +685,23 @@ public class Main {
         printProperty.put(FilePropertyNames.TOTALSPACE,false);
         printProperty.put(FilePropertyNames.USABLESPACE,false);
         printProperty.put(FilePropertyNames.WRITEF,false);
-        printProperty.put(FilePropertyNames.TYPE,false);
+        printProperty.put(FilePropertyNames.TYPE,true);
 
-        columnFormat.put(FilePropertyNames.TYPE,"1S");
-        columnFormat.put(FilePropertyNames.ABSPATH,"2S");
-        columnFormat.put(FilePropertyNames.FILENAME,"3S");
-        columnFormat.put(FilePropertyNames.CANPATH,"4S");
-        columnFormat.put(FilePropertyNames.EXECUTE,"5S");
-        columnFormat.put(FilePropertyNames.FREESPACE,"6S");
-        columnFormat.put(FilePropertyNames.HASHCODE,"7S");
-        columnFormat.put(FilePropertyNames.HIDDENF,"8S");
-        columnFormat.put(FilePropertyNames.LMTIME,"9S");
-        columnFormat.put(FilePropertyNames.OWNER,"10S");
-        columnFormat.put(FilePropertyNames.PARENT,"11S");
-        columnFormat.put(FilePropertyNames.READF,"12S");
-        columnFormat.put(FilePropertyNames.TOTALSPACE,"13S");
-        columnFormat.put(FilePropertyNames.USABLESPACE,".14S");
-        columnFormat.put(FilePropertyNames.WRITEF,"15S");
+        columnFormat.put(FilePropertyNames.TYPE,"%-3s");
+        columnFormat.put(FilePropertyNames.ABSPATH,"%-50S");
+        columnFormat.put(FilePropertyNames.FILENAME,"%-30S");
+        columnFormat.put(FilePropertyNames.CANPATH,"%-50S");
+        columnFormat.put(FilePropertyNames.EXECUTE,"%-3S");
+        columnFormat.put(FilePropertyNames.FREESPACE,"%-10S");
+        columnFormat.put(FilePropertyNames.HASHCODE,"%-20S");
+        columnFormat.put(FilePropertyNames.HIDDENF,"%-3S");
+        columnFormat.put(FilePropertyNames.LMTIME,"%-9S");
+        columnFormat.put(FilePropertyNames.OWNER,"%-10S");
+        columnFormat.put(FilePropertyNames.PARENT,"%-30S");
+        columnFormat.put(FilePropertyNames.READF,"%-3S");
+        columnFormat.put(FilePropertyNames.TOTALSPACE,"%-10S");
+        columnFormat.put(FilePropertyNames.USABLESPACE,"%-10S");
+        columnFormat.put(FilePropertyNames.WRITEF,"%-3S");
 
         //programKey.put(keyNames.DEBUG,Boolean.FALSE.toString());
         programKey.put(keyNames.DEBUG,Boolean.FALSE.toString());
@@ -686,6 +752,7 @@ public class Main {
         int delta = args[i].compareTo(file.getPath());
         String mask = args[i].substring(args[i].length()-delta+1,args[i].length());
         addAllFilesInList(file,0);
+
 
         for (File f: fileAList
              ) {
