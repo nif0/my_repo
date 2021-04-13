@@ -11,30 +11,17 @@ package com.company;
   то имя пути должно идти в конце
 
   поддерживаемые  короткие ключи
-  -D
-    включить вывод отладочной информации при работе утилиты.
-  -R
-    Включить рекурсивную выдачу списка каталогов.(по умолчанию стоит максимальная глубина рекурсии)
-  -d
-    Выдавать имена каталогов, как будто они обычные файлы, вместо того, чтобы показывать их содержимое.
-  -C
-    Напечатать список файлов в колонке с вертикальной сортировкой. Если есть ключ --sort=field, то сортировка
-    идёт по полю field. Иначе, сортировка идёт по первому столбцу с именем файла.
-  -t
-    Сортировать по показываемому временному штампу(mtime).
-  -l, --format=long, --format=verbose
-    В дополнении к имени каждого файла, выводятся тип файла, права доступа к файлу, количество ссылок на файл,
-    имя владельца, имя группы, размер файла в байтах и временной штамп (время последней модификации файла,
-    если не задано другое).
-  -a
-    выводит скрытые файлы
-  -h
-    печать справки и завершение работы
-  -H, --human-readable
-    Добавлять к каждому размеру файла букву размера, например, M для двоичных мегабайт (`мебибайт')
-  -s(i)
-    Делает то же, что и опция -h, но использует официальные единицы измерения
-    SI (где для расчетов используется 1000 вместо 1024 и, таким образом, M -- это 1000000 вместо 10485576)
+  -D  включить вывод отладочной информации при работе утилиты.
+  -R  Включить рекурсивную выдачу списка каталогов.(по умолчанию стоит максимальная глубина рекурсии)
+  -d  Выдавать имена каталогов, как будто они обычные файлы, вместо того, чтобы показывать их содержимое.
+  -C Напечатать список файлов в колонке с вертикальной сортировкой. Если есть ключ --sort=field, то сортировка идёт по полю field. Иначе, сортировка идёт по первому столбцу с именем файла.
+  -t  Сортировать по показываемому временному штампу(mtime).
+  -l, --format=long, --format=verbose В дополнении к имени каждого файла, выводятся тип файла, права доступа к файлу, количество ссылок на файл,
+    имя владельца, имя группы, размер файла в байтах и временной штамп (время последней модификации файла, если не задано другое).
+  -a  выводит скрытые файлы
+  -h печать справки и завершение работы
+  -H, --human-readable  Добавлять к каждому размеру файла букву размера, например, M для двоичных мегабайт (`мебибайт')
+
 
   длинные ключи
   --sort=field
@@ -280,7 +267,7 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.TYPE)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.TYPE),getFileProperty(f,FilePropertyNames.TYPE));
+                System.out.format(columnFormat.get(FilePropertyNames.TYPE),getFileProperty(f,FilePropertyNames.TYPE)+programKey.get(keyNames.COLUMNSEPARATE));
                 //result.append(getFileProperty(f,FilePropertyNames.TYPE));
             }
         } catch (Exception e) {
@@ -290,7 +277,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.ABSPATH)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.ABSPATH),getFileProperty(f,FilePropertyNames.ABSPATH));
+                System.out.format(columnFormat.get(FilePropertyNames.ABSPATH),getFileProperty(f,FilePropertyNames.ABSPATH)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -299,7 +287,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.PARENT)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.PARENT),getFileProperty(f,FilePropertyNames.PARENT));
+                System.out.format(columnFormat.get(FilePropertyNames.PARENT),getFileProperty(f,FilePropertyNames.PARENT)+programKey.get(keyNames.COLUMNSEPARATE));
+//                System.out.print(programKey.get(keyNames.COLUMNSEPARATE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -308,7 +297,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.FILENAME)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.FILENAME),getFileProperty(f,FilePropertyNames.FILENAME));
+                System.out.format(columnFormat.get(FilePropertyNames.FILENAME),getFileProperty(f,FilePropertyNames.FILENAME)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -317,7 +307,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.CANPATH)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.CANPATH),getFileProperty(f,FilePropertyNames.CANPATH));
+                System.out.format(columnFormat.get(FilePropertyNames.CANPATH),getFileProperty(f,FilePropertyNames.CANPATH)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -326,7 +317,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.FREESPACE)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.FREESPACE),getFileProperty(f,FilePropertyNames.FREESPACE));
+                System.out.format(columnFormat.get(FilePropertyNames.FREESPACE),getFileProperty(f,FilePropertyNames.FREESPACE)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -335,7 +327,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.TOTALSPACE)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.TOTALSPACE),getFileProperty(f,FilePropertyNames.TOTALSPACE));
+                System.out.format(columnFormat.get(FilePropertyNames.TOTALSPACE),getFileProperty(f,FilePropertyNames.TOTALSPACE)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -345,7 +338,8 @@ public class Main {
             if (printProperty.get(FilePropertyNames.USABLESPACE)) {
                 //String value =
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.USABLESPACE),getFileProperty(f,FilePropertyNames.USABLESPACE));
+                System.out.format(columnFormat.get(FilePropertyNames.USABLESPACE),getFileProperty(f,FilePropertyNames.USABLESPACE)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -354,7 +348,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.HASHCODE)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.HASHCODE),getFileProperty(f,FilePropertyNames.HASHCODE));
+                System.out.format(columnFormat.get(FilePropertyNames.HASHCODE),getFileProperty(f,FilePropertyNames.HASHCODE)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -363,7 +358,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.EXECUTE)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.EXECUTE),getFileProperty(f,FilePropertyNames.EXECUTE));
+                System.out.format(columnFormat.get(FilePropertyNames.EXECUTE),getFileProperty(f,FilePropertyNames.EXECUTE)+programKey.get(keyNames.COLUMNSEPARATE));
+             //   System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -372,7 +368,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.WRITEF)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.WRITEF),getFileProperty(f,FilePropertyNames.WRITEF));
+                System.out.format(columnFormat.get(FilePropertyNames.WRITEF),getFileProperty(f,FilePropertyNames.WRITEF)+programKey.get(keyNames.COLUMNSEPARATE));
+               // System.out.print(programKey.get(keyNames.COLUMNSEPARATE));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -381,7 +378,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.READF)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.READF),getFileProperty(f,FilePropertyNames.READF));
+                System.out.format(columnFormat.get(FilePropertyNames.READF),getFileProperty(f,FilePropertyNames.READF)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -390,7 +388,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.LMTIME)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.LMTIME),getFileProperty(f,FilePropertyNames.LMTIME));
+                System.out.format(columnFormat.get(FilePropertyNames.LMTIME),getFileProperty(f,FilePropertyNames.LMTIME)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -398,7 +397,8 @@ public class Main {
         try {
             if (printProperty.get(FilePropertyNames.OWNER)) {
                 i++;
-                System.out.format(columnFormat.get(FilePropertyNames.OWNER),getFileProperty(f,FilePropertyNames.OWNER));
+                System.out.format(columnFormat.get(FilePropertyNames.OWNER),getFileProperty(f,FilePropertyNames.OWNER)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -658,6 +658,9 @@ public class Main {
         return result;
     }
 
+    public static String[] getHelpUtils() {
+
+    }
 
     public static void main(String[] args)  {
         //очерёдность вывода столбцов в терминал.
