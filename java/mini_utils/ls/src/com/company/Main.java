@@ -24,8 +24,6 @@ package com.company;
 
 
   длинные ключи
-  --sort=field
-     сортирует вывод по полю filed
   --column-separate
     разделитель столбцов. По умолчанию это символ табуляции.
   --max-depth=N
@@ -38,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.*;
 import java.util.stream.Stream;
@@ -107,6 +106,7 @@ public class Main {
         PRINTHELP,
         LONGFORMAT,
         NOSHOWCATALOG, //влияет в addAllFilesInList
+        SORTBYTIMESTAMP,
 
         SORTBYFIELD,
         COLUMNSEPARATE,
@@ -127,6 +127,7 @@ public class Main {
                 case ONECOLUMN: return "с";
                 case PRINTHELP: return "h";
                 case LONGFORMAT: return "l";
+                case SORTBYTIMESTAMP: return "t";
                 case NOSHOWCATALOG: return "d";
                 case MAXDEPTH: return "max-depth";
                 case COLUMNSEPARATE: return "column-separate";
@@ -146,6 +147,7 @@ public class Main {
                 case PRINTHELP: return 'h';
                 case LONGFORMAT: return 'l';
                 case NOSHOWCATALOG: return 'd';
+                case SORTBYTIMESTAMP: return 't';
                 default: throw new IllegalArgumentException();
             }
         }
@@ -172,7 +174,7 @@ public class Main {
         }
     }
 
-    private static boolean debug = true;
+    private static boolean debug = false;
 
     private static FilePropertyNames sortField = null;
     //хранит в себе порядок вывода столбцов на терминал.
@@ -181,6 +183,8 @@ public class Main {
     private static Map<FilePropertyNames,Boolean> printProperty = new HashMap<>();
     private static Map<keyNames,String> programKey = new HashMap<>();
     private static Map<FilePropertyNames,String> columnFormat = new HashMap<>();
+
+    private static SimpleDateFormat dateFormat;
 
     static ArrayList<File> fileAList = new ArrayList<File>();
 
@@ -496,7 +500,7 @@ public class Main {
         String uniq_string = flags;
         Matcher keyTestMatcher = keyTest.matcher(uniq_string);
         //для строки с короткими ключами
-        if (keyTestMatcher.matches() ) {
+        if (!(uniq_string.substring(0,2).equals("--")) && (uniq_string.substring(0,1).equals("-")) ) {
             //удаляю повторы и включаю нужные флаги
             uniq_string = flags;
             for (char ch : uniq_string.toCharArray()) {
@@ -521,7 +525,13 @@ public class Main {
                     programKey.put(keyNames.ONECOLUMN,Boolean.TRUE.toString());
                     printProperty.put(FilePropertyNames.FILENAME,true);
                 }
-                if  (ch == keyNames.PRINTHELP.toChar() ) programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString());
+                if  (ch == keyNames.PRINTHELP.toChar() ) {
+                    programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString());
+                    System.out.println(getHelpUtils());
+                    return;
+
+                }
+                if  (ch == keyNames.SORTBYTIMESTAMP.toChar()) programKey.put(keyNames.SORTBYTIMESTAMP,Boolean.TRUE.toString());
                 if  (ch == keyNames.PRINTHIDDEN.toChar() ) programKey.put(keyNames.PRINTHIDDEN,Boolean.TRUE.toString());
                 if  (ch == keyNames.RECURSIVE.toChar() ) programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());
             }
@@ -614,7 +624,9 @@ public class Main {
                 break;
             }
             case LMTIME: {
-                result = String.format(Long.toString(f.lastModified()));
+                dateFormat = new SimpleDateFormat();
+                result = dateFormat.format(f.lastModified());
+
                 break;
             }
             case PARENT: {
@@ -658,8 +670,38 @@ public class Main {
         return result;
     }
 
-    public static String[] getHelpUtils() {
-
+    public static String getHelpUtils() {
+        StringBuilder result = new StringBuilder();
+        result.append("выводит список файлов и каталогов в указанной директории. Можно использовать маски для фильтрации имён.\n");
+        result.append("путь должен состоять из одного реально существующего корневого каталога и маски для фильтрации имён.\n");
+        result.append("Первыми идут ключи. Затем имя каталога и маска.\n");
+        result.append("        Например:\n");
+        result.append("F:\\projects\\ja[av]a\\mini_ut?ls\\ls\\.*\\.*xml$\n");
+        result.append("Если указаны ключи(пример):\n");
+        result.append("-Rdc --max-depth=5 F:\\projects\\ja[av]a\\mini_ut?ls\\ls\\.*\\.*xml$\n");
+        result.append("то имя пути должно идти в конце\n");
+        result.append("\n");
+        result.append("поддерживаемые  короткие ключи\n");
+        result.append("        -D  включить вывод отладочной информации при работе утилиты.\n");
+        result.append("        -R  Включить рекурсивную выдачу списка каталогов.(по умолчанию стоит максимальная глубина рекурсии\n");
+        result.append("-d  Выдавать имена каталогов, как будто они обычные файлы, вместо того, чтобы показывать их содержимое.\n");
+        result.append("        -C Напечатать список файлов в колонке с вертикальной сортировкой. Если есть ключ --sort=field,\n то сортировка идёт по полю field. Иначе, сортировка идёт по первому столбцу с именем файла.\n");
+        result.append("        -t  Сортировать по показываемому временному штампу(mtime).\n");
+        result.append("        -l, --format=long, --format=verbose В дополнении к имени каждого файла, выводятся тип файла,\n права доступа к файлу, количество ссылок на файл,\n");
+        result.append("        имя владельца, имя группы, размер файла в байтах и временной \n штамп (время последней модификации файла, если не задано другое).\n");
+        result.append("-a  выводит скрытые файлы\n");
+        result.append("        -h печать справки и завершение работы\n");
+        result.append("        -H, --human-readable  Добавлять к каждому размеру файла букву размера,\n например, M для двоичных мегабайт (`мебибайт')");
+        result.append("\n");
+        result.append("\n");
+        result.append("длинные ключи:\n");
+        result.append("        --sort=field");
+        result.append(" сортирует вывод по полю filed\n");
+        result.append("        --column-separate");
+        result.append("разделитель столбцов. По умолчанию это символ табуляции.\n");
+        result.append("        --max-depth=N");
+        result.append("максимальная глуина рекурсиии при включенном флаге R\n");
+        return result.toString();
     }
 
     public static void main(String[] args)  {
@@ -698,7 +740,7 @@ public class Main {
         columnFormat.put(FilePropertyNames.FREESPACE,"%-10S");
         columnFormat.put(FilePropertyNames.HASHCODE,"%-20S");
         columnFormat.put(FilePropertyNames.HIDDENF,"%-3S");
-        columnFormat.put(FilePropertyNames.LMTIME,"%-9S");
+        columnFormat.put(FilePropertyNames.LMTIME,"%-10S"); //хотелось бы определить формат отображения даты...
         columnFormat.put(FilePropertyNames.OWNER,"%-10S");
         columnFormat.put(FilePropertyNames.PARENT,"%-30S");
         columnFormat.put(FilePropertyNames.READF,"%-3S");
@@ -727,9 +769,7 @@ public class Main {
 
         LinkedList listFiles;
         /*
-            I separate the existing part of the path from the file name mask
-            and eventually expect a file object with the existing path (part of the param string).
-            the rest of the line will be read as a mask
+            разбор переданных коротких и длинных ключей(они должны быть первыми)
         */
         int i = 0;
         while (isParam(args[i])) {
@@ -738,24 +778,35 @@ public class Main {
         }
         debugPrintProgramProperty();
         if (i >= args.length) return;
-
+        if (programKey.get(keyNames.PRINTHELP).equals(Boolean.TRUE.toString())) {
+            System.out.println(getHelpUtils());
+            return;
+        }
+        /*
+            определение существующей части имени файла.
+        */
         file = new File(args[i]);
         while (!file.exists()) {
             file = new File(file.getParent());
         }
-
         /*
-             it is quite strange to use the compare method to determine the position of the mask
-             but the characters in the strings are the same. In this case, compare returns
-             the difference between the string for which I call the method and the string with which I compare it.
-             And in the case of param. compareTo (file.getPath ())
-             of line 2 is a subset of line 1.
-             I haven't fisgured out why lastIndex and indexOf return 0 in the result yet.
-        */
+        а несуществующую часть считаю маской. и заполняю список найденных файлов для вывода
+         */
         int delta = args[i].compareTo(file.getPath());
         String mask = args[i].substring(args[i].length()-delta+1,args[i].length());
         addAllFilesInList(file,0);
-
+        if (programKey.get(keyNames.SORTBYTIMESTAMP) == Boolean.TRUE.toString()) {
+            Comparator<File> comparator = new Comparator<File>() {
+                @Override
+                public int compare(File o1, File o2) {
+                    int result = 0;
+                    if (o1.lastModified() < o2.lastModified()) result = -1;
+                    if (o1.lastModified() > o2.lastModified()) result = 1;
+                    return result;
+                }
+            };
+            fileAList.sort(comparator);
+        }
 
         for (File f: fileAList
              ) {
