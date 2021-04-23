@@ -1,0 +1,94 @@
+--создание таблиц
+CREATE TABLE persons (
+id NUMBER PRIMARY key,
+name varchar2(150)
+);
+COMMIT;
+
+create table journal (
+id NUMBER PRIMARY key,
+per_id NUMBER,
+dtime date,
+type varchar2(1)
+);
+COMMIT;
+
+ALTER TABLE journal ADD FOREIGN KEY (per_id) REFERENCES persons(id);
+--COMMIT;
+--SELECT * FROM journal
+
+--генерация данных
+--создам 5 сотрудников для таблицы persons
+insert into persons (id,name) values (0,'Andrei');
+insert into persons (id,name) values ((select max(id)+1 from persons),'Mihail');
+insert into persons (id,name) values ((select max(id)+1 from persons),'Evgenij');
+insert into persons (id,name) values ((select max(id)+1 from persons),'Katja');
+insert into persons (id,name) values ((select max(id)+1 from persons),'Ksenija')
+COMMIT;
+
+
+--заполняю таблицу посещениями. За 1 проход цикла заполняю журнал событиями входа и выхода для одной даты.
+--сотрудников мало. Можно использовать простые insert'ы
+declare 
+i NUMBER;
+idx number;
+start_date DATE;
+delta float;
+BEGIN
+	dbms_random.seed(1);
+	start_date := to_date('01.01.2018 08:00','dd.mm.yyyy hh24:mi');
+    delta := dbms_random.value();
+    --для каждого сотрудника 500 записей.
+	FOR i IN  1..500 LOOP 
+    	delta := dbms_random.value(0,1/24);
+        --события входа
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Andrei'),start_date+delta,0);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Mihail'),start_date+delta,0);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Evgenij'),start_date+delta,0);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Katja'),start_date+delta,0);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Ksenija'),start_date+delta,0);
+        start_date := start_date + 10/24;
+	    --события выхода
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Andrei'),start_date+delta,1);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Mihail'),start_date+delta,1);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Evgenij'),start_date+delta,1);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Katja'),start_date+delta,1);
+	    insert into journal values ((SELECT COALESCE(max(id)+1,0) FROM journal), (SELECT id FROM persons j WHERE j.name = 'Ksenija'),start_date+delta,1);
+	   
+	    start_date := start_date + 1 - 10/24;
+	END LOOP;
+END;
+
+--обеспечить прогулы
+DECLARE
+i NUMBER;
+min_idx NUMBER;
+max_idx NUMBER;
+idx NUMBER;
+start_date DATE;
+delta float;
+BEGIN
+	dbms_random.seed(0);
+    min_idx := 0;
+    SELECT max(id) INTO max_idx FROM journal;
+    FOR i IN 0..300 LOOP 
+        idx := 0;
+        delete journal j where j.per_id = 0 AND trunc(j.dtime) in (SELECT DISTINCT trunc(dtime) FROM journal WHERE per_id = 0) ;
+       COMMIT;
+    END LOOP;
+END;
+
+--получение списка сотрудников и числа их опозданий за месяц
+SELECT
+	(SELECT name FROM persons WHERE id = per_id),to_char(trunc(dtime,'mm'),'dd.mm.yyyy'),count(id)
+FROM
+	(
+	SELECT
+		id,per_id, trunc(j.dtime),(min(dtime)-trunc(dtime)) delta,min(dtime) dtime
+	FROM
+		journal j WHERE j.TYPE='0' GROUP BY trunc(dtime),id,per_id)
+WHERE
+	delta > 8.50 / 24
+	AND to_char(dtime, 'D') NOT IN ('6', '7') 
+GROUP BY per_id,trunc(dtime,'mm')
+ORDER BY count(id) desc;
