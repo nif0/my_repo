@@ -1,315 +1,150 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.FileInputStream;
 import java.util.regex.Pattern;
+import java.lang.Enum;
 
 public class Main {
-    /*
-    Если последний аргумент является именем существующего каталога, то mv перемещает все остальные файлы в этот каталог.
-    В противном случае, если задано только два файла, то имя первого файла будет изменено на имя второго.
-    Если последний аргумент не является каталогом и задано более чем два файла, то будет выдано сообщение об ошибке.
-    Так, mv /a/x/y /b переименует файл /a/x/y в /b/y, если /b является существующим каталогом, и в /b, если нет.
-    Если при переименовании исходного_файла в файл_назначения, этот файл_назначения существует и при
-    этом задана опция -i или если произвести запись в файл назначения невозможно,
-    а стандартным выводом является терминал и не задана опция -f, то mv спрашивает у пользователя разрешение
-    на замену этого файла, которое выдается на стандартный вывод ошибок, и читает ответ из стандартного ввода.
-    Если ответ не утвердительный, то файл пропускается.
-    Когда и исходный_файл и файл_назначения находятся на одной файловой системе, они являются одним и тем же файлом
-    (изменяется только имя файла; владелец, права доступа, временные штампы остаются неизменными).
-    Если же они находятся на разных файловых системах, то исходный_файл копируется и затем удаляется.
-    mv будет копировать время последней модификации, время доступа, идентификаторы пользователя и группы и права доступа
-    к файлу если это возможно.
-    Если копирование идентификаторов пользователя и/или группы закончилось неудачно,
-    то в копии файла сбрасываются биты setuid и setgid.
-    опции:
-     -h  - help
-     -f  - force
-     -i  - interactive
-     -R  - recursive
-     -b  - backup
-     -u  - update
-     -v[1,5] - вывод отладочной информации. чем ольше v, ьем подробней отладка.
-     */
+/*
 
-
-
-    public  enum WorkMode{
-        CATALOG_MOVE,
-        FILE_IN_CATALOG,
-        GROUP_FILE_IN_CATALOG,
-        FILE_TO_FILE,
-        UNKNOW
-    }
-
-    public enum Option {
-        FORCE,
-        INTERACTIVE,
-        BACKUP,
-        UPDATE,
-        VERBOSE,
+аргументы:
+ -p - :создаёт полное дерево пути в адресе назначения
+ -h - :вывод справки
+ -r - :рекурсивное копирование каталогов
+ -t - :воссоздание копируемого дерева каталогов в целевом каталоге
+ */
+    private enum Flags {
+        CREATEPATH,
         PRINTHELP,
-        CREATEPATH
-    }
-
-    public enum OSType {
-        WINDOWS,
-        NIX,
-        MAC,
-        UNKNOW
-    }
-
-    public enum ArgType {
-        CATALOG, // аргумент - каталог,
-        FILE,    // аргумент - файл
-        CATALOG_FILEMASK, // аргумент - каталог + маска имён
-        OPTION_STRING,    // аргумент - строка опций
-        UNKNOWN           //аргумент -пустая строка, либо не определён.
-    }
-
-    static class FileFilter implements FilenameFilter {
-        private Pattern pattern;
-
-        public FileFilter(String regexp) {
-            pattern = Pattern.compile(regexp);
+        RECURSIVE,
+        COPYCATALOG;
+        public char toChar() {
+            char result = ' ';
+            switch (this) {
+                case CREATEPATH: return 'p';
+                case PRINTHELP: return 'h';
+                case RECURSIVE: return 'r';
+                case COPYCATALOG: return 't';
+                default: throw new IllegalArgumentException();
+            }
         }
+    }
+    private static Map<Flags,Boolean> flagsEnumMap = new HashMap<Flags, Boolean>();
 
-        @Override
-        public boolean accept(File dir, String name) {
-            return pattern.matcher(name).matches();
-        }
-    };
+private static String printHelp() {
+    return "help";
+}
+    private static void move(MoveElement element1, MoveElement element2) {
+        //element1 - что перемещаю. имя файла, каталога, либо путь и регулярное выражение.
+        //element2 - куда перемещаю. Это новое имя файла, либо каталог(1)
 
-    public static HashMap<Option,Boolean> useOption = new HashMap<>(5);
-    public static String OS = null;
-    public static Logger log = Logger.getLogger(Main.class.getName());
-    public static WorkMode workMode = WorkMode.UNKNOW;
-    public static ArrayList<File> fileList = new ArrayList<>();  //коллекция файлов для перемещения
-    public static OSType osType;
-
-    public static void main (String[] args) {
-        // сбор информацций о системе: тип  ОС, разделитель путей, список точек монтирования,
-        osType = getOSType();
-        String separator = File.separatorChar + "";
-        File[] disks = File.listRoots();
-        String userName = System.getProperty("user.name");
-        //   0. строка с параметрами для работы утилиты.
-        //   1. что перемещаю(можно маску)
-        //   2. куда перемещаю(файл, если 1 - одиночный файл. каталог, если 1 - маска файлов)
-        //   анализ параметров. и настройка утилиты для работы.
-        String arg1;
-        String arg2;
-        String arg3;
-        File file1; //перемещаемый файл, каталог, или группа файлов
-        File file2; //целевой каталог или файл
-        switch (args.length) {
-            case 0: return;
-            case 1: {
-                System.out.println("передан 1 аргумент. Что недостаточно для нормальной работы. \n Завершаю программу");
+        if (element2.getNumberRealElement() == 0) {
+            //ситуация: переименование(замена) файла.
+            //если каталога не существует, то имя считается названием файла
+            if (!element2.closeSeparator() && element1.getNumberRealElement()== 1) {
+                String pathName = element2.getExsistPath()+File.separator+element2.getNameMask();
+                element1.getFileList().get(0).renameTo(new File(pathName));
                 return;
             }
-            case 2: {
-                //для 2х аргументов
-                arg1 = new String(args[0]);
-                arg2 = new String(args[1]);
-                //arg3 = new String(args[2]);
-                //ожидаю два аргумента: файл 1 и файл 2.
-                if ( arg1.toLowerCase(Locale.ROOT).substring(0) == "-" ) {
-                    return;
-                };
-                switch (getArgType(arg1)) {
-                    case CATALOG:
-                        file1 = new File(arg1);
-                        file2 = new File(arg2);
-                        if (testPathForMove(file2)) {
-                            file1.renameTo(file2);
-                        } else {
-                            System.out.println("перемещение не удалось");
-                            return;
+            //closeSeparator == true. нужно поместить объект ВНУТРЬ каталога. нужен ключ p.
+            if (element2.closeSeparator() && element1.getNumberRealElement() == 1) {
+                if (flagsEnumMap.get(Flags.CREATEPATH)) {
+                    File f = new File(element2.getOriginalPath());
+                    f.mkdir();
+                    element1.getFileList().forEach(new Consumer<File>() {
+                        @Override
+                        public void accept(File file) {
+                            file.renameTo(new File(f.getAbsolutePath()+File.pathSeparatorChar+file.getName()));
                         }
-                        break;
-                    case FILE:
-                        file1 = new File(arg1);
-                        file2 = new File(arg2);
-                        if (testPathForMove(file2)) {
-                            file1.renameTo(file2);
-                        } else {
-                            System.out.println("перемещение не удалось");
-                            return;
-                        }
-                        break;
-                    case CATALOG_FILEMASK: {
-                        file1 = new File(arg1);
-                        file2 = new File(arg2);
-                        while (!file1.exists()) {
-                            file1 = new File(file1.getParent());
-                        }
-                        //выделяю маску
-                        int delta = arg1.compareTo(file1.getPath());
-                        String mask = arg1.substring( arg1.length()-delta,arg1.length() );
-                        System.out.println("work path: " + file1.getPath());
-                        System.out.println("mask: " + mask);
-                        FileFilter nameFilter = new FileFilter(mask);
-                        addFileInFileLists(file1, nameFilter);
-                        String newName;
-                        for (File tmp : fileList) {
-                             newName = file2.getAbsolutePath()+separator+tmp.getName();
-                             System.out.print("старое имя: ");
-                             System.out.println(tmp.getAbsolutePath());
-                             System.out.print("новое имя: ");
-                             System.out.println(newName);
-                             tmp.renameTo(new File(newName));
-                        }
-                        break;
-                    }
-                    case UNKNOWN: {
-                        System.out.println("путь: " + arg1 + " не существует");
-                    }
-                }
-                break;
-
-            }
-            case 3: {
-                //для 3х аргументов
-                arg1 = new String(args[0]);
-                arg2 = new String(args[1]);
-                arg3 = new String(args[2]);
-                if (getArgType(arg1) == ArgType.OPTION_STRING) {
-                    if (arg1.toLowerCase(Locale.ROOT).substring(0) == "-") {
-                        setUseOption(arg1);
-                    }
-                } else {
-                    System.out.println("первым параметром должна идти строка с аргументами");
-                }
-                switch (getArgType(arg2)) {
-                    case CATALOG: {
-                        file1 = new File(arg2);
-                        file2 = new File(arg3);
-                        if (testPathForMove(file2)) {
-                            file1.renameTo(file2);
-                        }
-                        break;
-                    }
-                    case FILE: {
-                        file1 = new File(arg2);
-                        file2 = new File(arg3);
-                        if (testPathForMove(file2)) {
-                            file1.renameTo(file2);
-                        }
-                        break;
-                    }
-                    case CATALOG_FILEMASK: {
-                        file1 = new File(arg2);
-                        file2 = new File(arg3);
-                        while (!file1.exists()) {
-                            file1 = new File(file1.getParent());
-                        }
-                        //выделяю маску
-                        int delta = arg2.compareTo(file1.getPath());
-                        String mask = arg2.substring( arg2.length()-delta+1,arg2.length() );
-                        System.out.println("work path: " + file1.getPath());
-                        System.out.println("mask: " + mask);
-                        FileFilter nameFilter = new FileFilter(mask);
-                        addFileInFileLists(file1, nameFilter);
-                        for (File tmp : fileList) {
-                            tmp.renameTo(new File(file2.getAbsolutePath()+separator+tmp.getName()));
-                        }
-                    }
+                    });
                 }
             }
         }
-        // составление списка файлов по арг1.
-        // перемещение.
-    }
-
-    private static boolean isWindows() {
-        return getOSName().toLowerCase().contains("wind");
-    }
-
-    private static boolean isUnix() {
-        return getOSName().toLowerCase().contains("nix");
-    }
-
-    private static boolean isMac() {
-        return getOSName().toLowerCase().contains("mac");
-    }
-
-    private static OSType getOSType() {
-        if (isWindows()) return OSType.WINDOWS;
-        if (isUnix()) return OSType.NIX;
-        if (isMac()) return OSType.MAC;
-        return OSType.UNKNOW;
-    }
-
-    private static String getOSName() {
-        if (OS == null) {
-            OS = System.getProperty("os.name");
-        }
-        return OS;
-    }
-
-    private static void setUseOption(String srgStr) {
-
-        useOption.replace(Option.PRINTHELP,false);
-        useOption.replace(Option.UPDATE,false);
-        useOption.replace(Option.BACKUP,false);
-        useOption.replace(Option.VERBOSE,false);
-        useOption.replace(Option.INTERACTIVE,false);
-        useOption.replace(Option.FORCE,false);
-        useOption.replace(Option.CREATEPATH,false);
-    }
-
-    private static ArgType getArgType(String arg) {
-        ArgType result;
-        if (arg.toLowerCase().lastIndexOf('-') == 0) {
-            return ArgType.OPTION_STRING;
-        }
-        File f = new File(arg);
-        if (f.exists() && f.isDirectory()) {
-            return ArgType.CATALOG;
-        }
-
-        if (f.exists() && f.isFile()) {
-            return ArgType.FILE;
-        }
-        while ( !f.exists()) {
-            f = new File(f.getParent());
-        }
-        if (f.exists() && f.isDirectory()) {
-            return ArgType.CATALOG_FILEMASK;
-        } else {
-            return ArgType.UNKNOWN;
-        }
-    };
-
-    private static boolean testPathForMove(File target) {
-        /*
-        требования к конечному пути имени файла
-        Шаблон: /Реально_существующий_каталог/новое_имя
-                /Реально_существующий_каталог/существующее_имя
-        Ситуации: /реально_существующий_каталог/несуществующая_часть/новое_имя
-                  /несуществующий_путь/новое_имя
-        Вернут false.
-         */
-        if (target.exists())  {
-            return true;
-        } else {
-            target = new File(target.getParent());
-            return target.exists();
-        }
-    }
-
-    private static void addFileInFileLists(File f, FileFilter filter) {
-
-        for (File tmp: f.listFiles(filter)) {
-            if (tmp.isDirectory()) {
-                addFileInFileLists(f,filter);
-            } else {
-                fileList.add(tmp);
+        if (element2.getNumberRealElement() == 1) {
+            //ситуация: переименование(замена) файла.
+            if (element2.getNumberFiles() == 1 && element1.getNumberFiles() == 1) {
+                 element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                 return;
+            }
+            //ситуация: переименование директории
+            if (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && !element2.closeSeparator()) {
+                element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+            }
+            //ситуация: перемещение директории
+            if (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && element2.closeSeparator()) {
+                element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+            }
+            //ситуация: файл(ы) и каталоги внутрь каталога
+            if (element2.getNumberDirectories() == 1 && element1.getNumberFiles() >= 1 && element2.closeSeparator()) {
+                String newName = "";
+                for (File f : element1.getFileList()) {
+                    newName = element2.getExsistPath()+File.pathSeparatorChar+f.getName();
+                    f.renameTo(new File(newName));
+                }
             }
         }
     }
+
+    public static void main (String[] args) {
+        int args_count = 0;
+        flagsEnumMap.put(Flags.PRINTHELP,false);
+        flagsEnumMap.put(Flags.COPYCATALOG,false);
+        flagsEnumMap.put(Flags.CREATEPATH,false);
+        flagsEnumMap.put(Flags.COPYCATALOG,false);
+        //проверить количество параметров
+        if (args.length == 1) {
+            //передали один аргумент. Начало с "-" - значит что идёт строка с короткими значениями
+            if (args[0].substring(0, 1).equals("-")) {
+                char c = args[0].charAt(1);
+                if (c == Flags.PRINTHELP.toChar()) {
+                    flagsEnumMap.replace(Flags.PRINTHELP, true);
+                    System.out.println(printHelp());
+                }
+            }
+        }
+        if (args.length == 2) {
+           //передали два аргумента. В этом случае считаю что строки со флагами нет.
+           if (args[0].substring(0,1).equals("-")) {
+                System.out.println("ошибка в случае 2х аргументов");
+                return;
+           }
+           MoveElement element1 = new MoveElement(args[0]);
+           MoveElement element2 = new MoveElement(args[1]);
+           move(element1,element2);
+        }
+        if (args.length == 3) {
+            if (args[0].substring(0,1).equals("-")) {
+                //разбираем флаги
+                for (char c : args[0].toCharArray()) {
+                    if (c == Flags.COPYCATALOG.toChar()) {
+                        flagsEnumMap.replace(Flags.COPYCATALOG,true);
+                        continue;
+                    }
+                    if (c == Flags.PRINTHELP.toChar()) {
+                        flagsEnumMap.replace(Flags.PRINTHELP,true);
+                        continue;
+                    }
+                    if (c == Flags.CREATEPATH.toChar()) {
+                        flagsEnumMap.replace(Flags.CREATEPATH,true);
+                        continue;
+                    }
+                    if (c == Flags.RECURSIVE.toChar()) {
+                        flagsEnumMap.replace(Flags.RECURSIVE,true);
+                        continue;
+                    }
+                    if (c == '-') continue;
+                    throw new IllegalArgumentException("");
+                }
+            }
+            //флаги прочитаны. Ожидаю что оставшиеся два аргумента будут валидными путями в ФС.
+            MoveElement element1 = new MoveElement(args[1]);
+            MoveElement element2 = new MoveElement(args[2]);
+            move(element1,element2);
+        }
+            //
+    }
+
 }
