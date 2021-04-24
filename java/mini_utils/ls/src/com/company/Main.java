@@ -91,7 +91,7 @@ public class Main {
                 case LMTIME: return "lmtime";
                 case OWNER: return "owner";
                 case TYPE: return "type";
-                default: throw new IllegalArgumentException();
+                    default: throw new IllegalArgumentException();
             }
         }
     }
