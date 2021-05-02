@@ -49,7 +49,7 @@ private static String printHelp() {
                 element1.getFileList().get(0).renameTo(new File(pathName));
                 return;
             }
-            //closeSeparator == true. нужно поместить объект ВНУТРЬ каталога. нужен ключ p.
+            //closeSeparator == true. нужно поместить объект ВНУТРЬ каталога. нужен ключ p
             if (element2.closeSeparator() && element1.getNumberRealElement() == 1) {
                 if (flagsEnumMap.get(Flags.CREATEPATH)) {
                     File f = new File(element2.getOriginalPath());
@@ -66,6 +66,7 @@ private static String printHelp() {
         if (element2.getNumberRealElement() == 1) {
             //ситуация: переименование(замена) файла.
             if (element2.getNumberFiles() == 1 && element1.getNumberFiles() == 1) {
+                 element2.getFileList().get(0).delete();
                  element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
                  return;
             }
@@ -73,12 +74,14 @@ private static String printHelp() {
             if (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && !element2.closeSeparator()) {
                 element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
             }
-            //ситуация: перемещение директории
+            //ситуация: перемещение директории внутрь
             if (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && element2.closeSeparator()) {
-                element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                element1.getFileList().get(0).renameTo(new File(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()));
             }
             //ситуация: файл(ы) и каталоги внутрь каталога
-            if (element2.getNumberDirectories() == 1 && element1.getNumberFiles() >= 1 && element2.closeSeparator()) {
+            if (element2.getNumberDirectories() == 1 &&
+                    element1.getNumberFiles() >= 1 &&
+                    element2.closeSeparator()) {
                 String newName = "";
                 for (File f : element1.getFileList()) {
                     newName = element2.getExsistPath()+File.pathSeparatorChar+f.getName();
@@ -90,6 +93,7 @@ private static String printHelp() {
 
     public static void main (String[] args) {
         int args_count = 0;
+        String tmp = args[1];
         flagsEnumMap.put(Flags.PRINTHELP,false);
         flagsEnumMap.put(Flags.COPYCATALOG,false);
         flagsEnumMap.put(Flags.CREATEPATH,false);

@@ -13,19 +13,36 @@ public class MoveElement {
     private String nameMask;
     private String originalPath;
     private Pattern pattern;
+    private boolean closeSeparator = false;
 
 
 
     public MoveElement(String f) {
         originalPath = f;
+        if (f.indexOf("\"") == f.length()-1) {
+            f = f.substring(0,f.length()-1);
+            //closeSeparator = true;
+        }
+        String t = f.substring(f.length()-1);
+        closeSeparator = (t.equals(File.separator));
         File x;
         x = new File(f);
         while (!x.exists()) {
             x = new File(x.getParent());
         }
-        existsPath = x.toPath().toString();
-        nameMask = f.substring(existsPath.length());
-        pattern = Pattern.compile(nameMask);
+        existsPath = x.toPath().toString() + (closeSeparator ? File.separator : "");
+        try {
+            //выход за границы массива при компиляции паттерна в ситуации, когда existsPath > f.
+            if (f.length() < existsPath.length()) {
+                nameMask = "";
+            } else nameMask = f.substring(existsPath.length());
+            pattern = Pattern.compile(nameMask);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("nameMask: "+nameMask);
+            pattern = Pattern.compile("");
+        }
         arrayList = getItemList();
     }
 
@@ -62,32 +79,32 @@ public class MoveElement {
 
     public long getNumberDirectories() {
         //return 0;
-
+        long result = 0;
         Predicate<File> p = new Predicate<File>() {
             @Override
             public boolean test(File file) {
                 return file.isDirectory();
             }
         };
-        return arrayList.stream().filter(p).count();
+        result = arrayList.stream().filter(p).count();
+        return result;
     }
 
     public long getNumberFiles() {
        // return 0;
-
+        long result = 0;
         Predicate<File> p = new Predicate<File>() {
             @Override
             public boolean test(File file) {
                 return file.isFile();
             }
         };
-        return arrayList.stream().filter(p).count();
+        result = arrayList.stream().filter(p).count();
+        return result;
     }
 
     public boolean closeSeparator() {
-        boolean result;
-        result = originalPath.substring(originalPath.length()-1).equals( File.pathSeparatorChar);
-        return result;
+        return this.closeSeparator;
     }
 
     private ArrayList<File> getItemList() {
