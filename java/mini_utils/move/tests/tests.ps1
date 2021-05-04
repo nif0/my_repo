@@ -32,4 +32,4 @@ echo "start test2"
 
 #группы файлов. Имя задаётся регуляркой.
 #полностью не работает
-..\move\out\artifacts\move_jar\move.jar "F:\git\my_repo\java\mini_utils\move\tests\^.*.txt" F:\git\my_repo\java\mini_utils\move\tests\f1\
+..\move\out\artifacts\move_jar\move.jar "F:\git\my_repo\java\mini_utils\move\tests\f1\^.*.txt" F:\git\my_repo\java\mini_utils\move\tests\

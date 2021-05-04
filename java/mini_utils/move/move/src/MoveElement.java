@@ -35,7 +35,11 @@ public class MoveElement {
             //выход за границы массива при компиляции паттерна в ситуации, когда existsPath > f.
             if (f.length() < existsPath.length()) {
                 nameMask = "";
-            } else nameMask = f.substring(existsPath.length());
+            } else {
+                if (f.length() == existsPath.length()) {
+                    nameMask = "";
+                } else nameMask = f.substring(existsPath.length() + 1);
+            }
             pattern = Pattern.compile(nameMask);
         }
         catch (Exception e) {

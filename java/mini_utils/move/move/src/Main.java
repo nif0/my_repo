@@ -84,7 +84,7 @@ private static String printHelp() {
                     element2.closeSeparator()) {
                 String newName = "";
                 for (File f : element1.getFileList()) {
-                    newName = element2.getExsistPath()+File.pathSeparatorChar+f.getName();
+                    newName = element2.getExsistPath()+f.getName();
                     f.renameTo(new File(newName));
                 }
             }
