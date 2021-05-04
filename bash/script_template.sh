@@ -1,8 +1,8 @@
 #!/bin/bash
-declare PID_FILE
-declare LOG_FILE;
+declare PID_FILE="/tmp/pid";
+declare LOG_FILE="/tmp/log";
 declare MAX_LOG_SIZE;
-declare LOG_LEVEL; #0-5
+declare LOG_LEVEL=3; #0-5
 declare MAXIMUM_NUMBER_INSTANCES;
 declare CONFIG;
 declare PARAMETER;
@@ -13,15 +13,17 @@ function create_pid_file()
 }
 
 function delete_pid_file() {
-    if [ -f $PID_FILE ]; then rm $PID_FILE; fi;
+ 
+   if [ -f $PID_FILE ]; then rm $PID_FILE; fi;
 }
 
-function write_log() #<D0><B4><D0><B2><D0><B0> <D0><B0><D1><80><D0><B3><D1><83><D0><BC><D0><B5><D0><BD><D1><82><D0><B0>: LEVEL, MESSAGE
+function write_log()
 {
+    echo $1 $2
     level=$1;
         message=$2;
     if [ "$level" -lt  "$LOG_LEVEL" ]; then
-            echo "$date $message";
+            echo "$date $message" >> $LOG_FILE;
         fi;
 }
 
@@ -42,12 +44,21 @@ function read_conf()
     fi
 }
 
+function on_EXIT() {
+    delete_pid_file;
+    write_log 1 "exit";
+}
 
-function init()
-{
+
+function init() {
+	#operating system signal processing
+	trap on_EXIT EXIT;
+        
+	echo "$1";
         while [ -n "$1" ];
         do
         param=$1;
+        echo $param;
             case "$param" in
                 -config)
                     shift;
@@ -79,21 +90,33 @@ function init()
                                 unset pref;
                         fi;
                         unset s;
-            unset len;
-            unset mask;
+                        unset len;
+                        unset mask;
                         ;;
+		*) shift; ;;	
                 esac;
         done;
+    create_pid_file;
 }
 
 function main()
 {
-    echo "main";
+   write_log 4 "main test runing";
+   write_log 4  test;
+sleep 60;
+write_log 4 test;
+sleep 60;
+write_log 4  test;
+sleep 60;
+write_log 4  test;
+sleep 60;
+write_log 4  test;
+sleep 60;
 }
 
 function end_work()
 {
-echo     delete_pid_file;
+   delete_pid_file;
 }
 
 init $* ;
