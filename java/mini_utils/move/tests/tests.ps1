@@ -31,5 +31,8 @@ echo "start test2"
 
 
 #группы файлов. Имя задаётся регуляркой.
-#полностью не работает
+# работает
+#..\move\out\artifacts\move_jar\move.jar "F:\git\my_repo\java\mini_utils\move\tests\^.*.txt" F:\git\my_repo\java\mini_utils\move\tests\
 ..\move\out\artifacts\move_jar\move.jar "F:\git\my_repo\java\mini_utils\move\tests\f1\^.*.txt" F:\git\my_repo\java\mini_utils\move\tests\
+#sleep 30
+#..\move\out\artifacts\move_jar\move.jar "F:\git\my_repo\java\mini_utils\move\tests\^.*.txt" F:\git\my_repo\java\mini_utils\move\tests\f1\

@@ -57,7 +57,7 @@ private static String printHelp() {
                     element1.getFileList().forEach(new Consumer<File>() {
                         @Override
                         public void accept(File file) {
-                            file.renameTo(new File(f.getAbsolutePath()+File.pathSeparatorChar+file.getName()));
+                            file.renameTo(new File(f.getAbsolutePath()+File.separator+file.getName()));
                         }
                     });
                 }
