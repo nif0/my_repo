@@ -1,6 +1,5 @@
 connect to demo 
 
-
 select * from boarding_passes bp
 select * from ticket_flights tf 
 select * from tickets t 
@@ -56,28 +55,13 @@ on a3.aircraft_code = ad.aircraft_code --using a3.aircraft_code, ad.aircraft_cod
 
 select a2.airport_name, count(f.flight_id) from flights f, airports a2 where a2.airport_code = f.departure_airport 
 group by (a2.airport_name) having count(f.flight_id) > 400
+ 
+create table flight_and_passenger (
+    ticket_ticket_no bpchar(13),
+    passenger_passenger_id varchar(20)
+);
+commit;
+create index ticket_idx on flight_and_passenger using hash /*btree*/ (ticket_ticket_no);
+create index passenger_idx on flight_and_passenger using hash /*btree*/ (passenger_passenger_id);
 
-select 
 
-select * from boarding_passes bp
-select * from aircrafts a2 --самолёты
-select * from aircrafts_data ad 
-select * from airports a3 
-select * from ticket_flights tf 
-select * from tickets t 
-select * from seats
-select * from bookings b2 
-select * from flights f2 
-select * from routes r 
-select * from flights_v fv 
-select * from pg_catalog.pg_stat_all_tables psat 
-select * from airports a 
-select * from flight_and_passenger
-create table flight_and_passenger as
-select t1.flight_id ,t1.passenger_id from flight_and_passenger t2 join flight_and_passenger t1 
-on t2.flight_id = t1.flight_id-- and t2.passenger_id = t1.passenger_id
-order by t1.flight_id
-create index flightidx on flight_and_passenger using hash (flight_id) --using hash
-order by t1.flight_id 
-
-select distinct flight_id from flight_and_passenger
