@@ -58,10 +58,19 @@ group by (a2.airport_name) having count(f.flight_id) > 400
  
 create table flight_and_passenger (
     ticket_ticket_no bpchar(13),
+    passenger_passenger_id varchar(20);
+    
+);
+
+create table flight_and_passenger4 (
+    ticket_ticket_no bpchar(13),
     passenger_passenger_id varchar(20)
+--    foreign key(passenger_passenger_id)   references tickets(passenger_id),
+--    foreign key(ticket_ticket_no)   references tickets(ticket_no)
 );
 commit;
-create index ticket_idx on flight_and_passenger using hash /*btree*/ (ticket_ticket_no);
-create index passenger_idx on flight_and_passenger using hash /*btree*/ (passenger_passenger_id);
+ALTER TABLE bookings.flight_and_passenger4 add CONSTRAINT flight_and_passenger4_passenger_passenger_id_fkey foreign key(passenger_passenger_id)   references tickets(passenger_id) on update cascade on delete set null;
+ALTER TABLE bookings.flight_and_passenger4 add CONSTRAINT flight_and_passenger4_ticket_ticket_no_fkey foreign key(ticket_ticket_no)   references tickets(ticket_no) on update cascade on delete set null;
+--alter table flight_and_passenger4 drop constraint flight_and_passenger4_ticket_ticket_no_fkey
 
 
