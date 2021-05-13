@@ -22,11 +22,19 @@ select * from aircrafts a3
 left join 
 aircrafts_data ad 
 on a3.aircraft_code = ad.aircraft_code 
+using (aircraft_code)
 
 select * from aircrafts a3 
 right join 
 aircrafts_data ad 
 on a3.aircraft_code = ad.aircraft_code 
+using (aircraft_code)
+
+select * from aircrafts a3 
+full join 
+aircrafts_data ad 
+using (aircraft_code) 
+
 
 --каждый с каждым
 select * from aircrafts a3 
@@ -73,4 +81,14 @@ ALTER TABLE bookings.flight_and_passenger4 add CONSTRAINT flight_and_passenger4_
 ALTER TABLE bookings.flight_and_passenger4 add CONSTRAINT flight_and_passenger4_ticket_ticket_no_fkey foreign key(ticket_ticket_no)   references tickets(ticket_no) on update cascade on delete set null;
 --alter table flight_and_passenger4 drop constraint flight_and_passenger4_ticket_ticket_no_fkey
 
+select cast('12/03/2001' as date) 
+select cast('0100' as integer)
+select cast('0100' as text)
+create table binary_t (value integer) ;
+
+insert into binary_t(value) values(0);
+select * from binary_t
+commit;
+select case value when 0 then '0' when 1 then '1' when 2 then '2' else null end from binary_t
+select if value > 5 then 'ok' else 'not ok' end if from binary_t
 
