@@ -28,7 +28,7 @@ select * from aircrafts a3
 right join 
 aircrafts_data ad 
 on a3.aircraft_code = ad.aircraft_code 
-using (aircraft_code)
+--using (aircraft_code)
 
 select * from aircrafts a3 
 full join 
@@ -90,5 +90,6 @@ insert into binary_t(value) values(0);
 select * from binary_t
 commit;
 select case value when 0 then '0' when 1 then '1' when 2 then '2' else null end from binary_t
-select if value > 5 then 'ok' else 'not ok' end if from binary_t
+
+
 
