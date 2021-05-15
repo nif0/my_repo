@@ -790,10 +790,16 @@ public class Main {
             file = new File(file.getParent());
         }
         /*
-        а несуществующую часть считаю маской. и заполняю список найденных файлов для вывода
+           а несуществующую часть считаю маской. и заполняю список найденных файлов для вывода
          */
-        int delta = args[i].compareTo(file.getPath());
-        String mask = args[i].substring(args[i].length()-delta+1,args[i].length());
+        String mask;
+        int delta;
+        if (args[i].length() == file.getPath().length())  {
+            delta = 0;
+        } else {
+            delta = args[i].compareTo(file.getPath());
+        }
+        mask = args[i].substring(args[i].length()-delta,args[i].length());
         addAllFilesInList(file,0);
         if (programKey.get(keyNames.SORTBYTIMESTAMP) == Boolean.TRUE.toString()) {
             Comparator<File> comparator = new Comparator<File>() {
