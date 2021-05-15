@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="ls:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ls_jar</output-path>
+    <root id="archive" name="ls.jar">
+      <element id="module-output" name="ls" />
+    </root>
+  </artifact>
+</component>
