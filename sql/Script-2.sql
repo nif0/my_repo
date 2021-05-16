@@ -64,18 +64,6 @@ on a3.aircraft_code = ad.aircraft_code --using a3.aircraft_code, ad.aircraft_cod
 select a2.airport_name, count(f.flight_id) from flights f, airports a2 where a2.airport_code = f.departure_airport 
 group by (a2.airport_name) having count(f.flight_id) > 400
  
-create table flight_and_passenger (
-    ticket_ticket_no bpchar(13),
-    passenger_passenger_id varchar(20);
-    
-);
-
-create table flight_and_passenger4 (
-    ticket_ticket_no bpchar(13),
-    passenger_passenger_id varchar(20)
---    foreign key(passenger_passenger_id)   references tickets(passenger_id),
---    foreign key(ticket_ticket_no)   references tickets(ticket_no)
-);
 commit;
 ALTER TABLE bookings.flight_and_passenger4 add CONSTRAINT flight_and_passenger4_passenger_passenger_id_fkey foreign key(passenger_passenger_id)   references tickets(passenger_id) on update cascade on delete set null;
 ALTER TABLE bookings.flight_and_passenger4 add CONSTRAINT flight_and_passenger4_ticket_ticket_no_fkey foreign key(ticket_ticket_no)   references tickets(ticket_no) on update cascade on delete set null;
@@ -91,5 +79,13 @@ select * from binary_t
 commit;
 select case value when 0 then '0' when 1 then '1' when 2 then '2' else null end from binary_t
 
+select value from binary_t bt where (select value from binary_t where value = 5) = 5
+select value from binary_t bt where exists (select value from binary_t where value is null) 
+select value from binary_t bt where not exists (select value from binary_t where value is null) 
+select value from binary_t bt where not exists (select value from binary_t where value is null) and true
+select value from binary_t bt where not exists (select value from binary_t where value is null) and false
 
-
+select value from binary_t bt where 8 < any (select value from binary_t )
+select value from binary_t bt where 4 = some (select value from binary_t )
+select value from binary_t bt where 4 = all (select value from binary_t where value = 4)
+explain  select value from binary_t bt where 4 = all (select value from binary_t where value = 9)
