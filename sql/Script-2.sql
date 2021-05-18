@@ -89,3 +89,29 @@ select value from binary_t bt where 8 < any (select value from binary_t )
 select value from binary_t bt where 4 = some (select value from binary_t )
 select value from binary_t bt where 4 = all (select value from binary_t where value = 4)
 explain  select value from binary_t bt where 4 = all (select value from binary_t where value = 9)
+
+select '10','20'
+select all value from binary_t where value between 2 and 4
+update binary_t  set value = 1 where value = 10
+
+create table sity (
+sity_id integer primary key,
+name varchar(200)
+);
+insert into sity(sity_id,name) values(1,'Москва');
+insert into sity(sity_id,name) values(2,'Екатеринбург');
+insert into sity(sity_id,name) values(3,'Владивосток');
+insert into sity(sity_id,name) values(4,'Архангельск');
+insert into sity(sity_id,name) values(5,'Асбест');
+insert into sity(sity_id,name) values(6,'Тольяти');
+insert into sity(sity_id,name) values(7,'Пекин');
+insert into sity(sity_id,name) values(8,'Нью-Йорк');
+insert into sity(sity_id,name) values(9,'Париж');
+commit;
+
+
+select * from sity_countries sc left join sity s on sc.sity_sity_id = s.sity_id
+select * from sity_countries sc full join sity s on sc.sity_sity_id = s.sity_id
+
+
+

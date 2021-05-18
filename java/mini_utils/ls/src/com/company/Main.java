@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.*;
@@ -63,6 +64,7 @@ public class Main {
         CANPATH,     // canonical path
         FREESPACE,
         TOTALSPACE,
+        FILESIZE,
         USABLESPACE,
         HASHCODE,
         EXECUTE,   //executable flag
@@ -84,6 +86,7 @@ public class Main {
                 case TOTALSPACE: return "totalspace";
                 case USABLESPACE: return "usespace";
                 case HASHCODE: return "hashcode";
+                case FILESIZE: return "filesize";
                 case EXECUTE: return "execute";
                 case WRITEF: return "write";
                 case READF: return "read";
@@ -267,7 +270,6 @@ public class Main {
         StringBuilder result = new StringBuilder();
         String formatString = new String();
         int i = 0;
-
         try {
             if (printProperty.get(FilePropertyNames.TYPE)) {
                 i++;
@@ -329,8 +331,26 @@ public class Main {
         }
 
         try {
+            if (printProperty.get(FilePropertyNames.FILESIZE)) {
+                i++;
+                System.out.format(columnFormat.get(FilePropertyNames.FILESIZE),getFileProperty(f,FilePropertyNames.FILESIZE)+programKey.get(keyNames.COLUMNSEPARATE));
+                //System.out.print();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
             if (printProperty.get(FilePropertyNames.TOTALSPACE)) {
                 i++;
+                //Float s = columnFormat.get(FilePropertyNames.TOTALSPACE);
+                /*
+                Float _totelspace;
+                if (programKey.get(keyNames.HUMANREADABLEFORMAT).equals(Boolean.TRUE.toString())) {
+                    _totelspace = toHumanReadableFormat(s);
+                }
+
+                */
                 System.out.format(columnFormat.get(FilePropertyNames.TOTALSPACE),getFileProperty(f,FilePropertyNames.TOTALSPACE)+programKey.get(keyNames.COLUMNSEPARATE));
                 //System.out.print();
             }
@@ -511,7 +531,7 @@ public class Main {
                     programKey.put(keyNames.LONGFORMAT,Boolean.TRUE.toString());
                     printProperty.put(FilePropertyNames.TYPE,Boolean.TRUE);
                     printProperty.put(FilePropertyNames.FILENAME,Boolean.TRUE);
-                    printProperty.put(FilePropertyNames.USABLESPACE,Boolean.TRUE);
+                    printProperty.put(FilePropertyNames.FILESIZE,Boolean.TRUE);
                     printProperty.put(FilePropertyNames.LMTIME,Boolean.TRUE);
                     printProperty.put(FilePropertyNames.OWNER,Boolean.TRUE);
                     printProperty.put(FilePropertyNames.READF,Boolean.TRUE);
@@ -533,7 +553,10 @@ public class Main {
                 }
                 if  (ch == keyNames.SORTBYTIMESTAMP.toChar()) programKey.put(keyNames.SORTBYTIMESTAMP,Boolean.TRUE.toString());
                 if  (ch == keyNames.PRINTHIDDEN.toChar() ) programKey.put(keyNames.PRINTHIDDEN,Boolean.TRUE.toString());
-                if  (ch == keyNames.RECURSIVE.toChar() ) programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());
+                if  (ch == keyNames.RECURSIVE.toChar() ) {
+                    programKey.put(keyNames.RECURSIVE,Boolean.TRUE.toString());
+                    programKey.put(keyNames.MAXDEPTH,Integer.toString(Integer.MAX_VALUE));
+                }
             }
             //return;
         }
@@ -653,16 +676,45 @@ public class Main {
                 result = String.format(Integer.toString(f.hashCode()));
                 break;
             }
+            case FILESIZE: {
+                if (programKey.get(keyNames.HUMANREADABLEFORMAT).equals(Boolean.TRUE)) {
+                    try {
+                        result = toHumanReadableFormat(Files.size(f.toPath()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
+                        result = toHumanReadableFormat(Files.size(f.toPath()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
             case FREESPACE: {
-                result = String.format(Long.toString(f.getFreeSpace()));
+                if (programKey.get(keyNames.HUMANREADABLEFORMAT).equals(Boolean.TRUE)) {
+                    result = toHumanReadableFormat(f.getFreeSpace());
+                } else {
+                    result = String.format(Long.toString(f.getFreeSpace()));
+                }
                 break;
             }
             case TOTALSPACE: {
-                result = String.format(Long.toString(f.getTotalSpace()));
+                if (programKey.get(keyNames.HUMANREADABLEFORMAT).equals(Boolean.TRUE)) {
+                    result = toHumanReadableFormat(f.getTotalSpace());
+                } else {
+                    result = String.format(Long.toString(f.getTotalSpace()));
+                }
                 break;
             }
             case USABLESPACE: {
-                result = String.format(Long.toString(f.getUsableSpace()));
+                String hf = programKey.get(keyNames.HUMANREADABLEFORMAT);
+                if (hf.equals(Boolean.TRUE.toString())) {
+                    result = toHumanReadableFormat(f.getUsableSpace());
+                } else {
+                    result = String.format(Long.toString(f.getUsableSpace()));
+                }
                 break;
             }
             default: result = "";
@@ -746,6 +798,7 @@ public class Main {
         columnFormat.put(FilePropertyNames.READF,"%-3S");
         columnFormat.put(FilePropertyNames.TOTALSPACE,"%-10S");
         columnFormat.put(FilePropertyNames.USABLESPACE,"%-10S");
+        columnFormat.put(FilePropertyNames.FILESIZE,"%-10S");
         columnFormat.put(FilePropertyNames.WRITEF,"%-3S");
 
         //programKey.put(keyNames.DEBUG,Boolean.FALSE.toString());
@@ -756,7 +809,7 @@ public class Main {
         programKey.put(keyNames.PRINTHELP,Boolean.FALSE.toString());
         programKey.put(keyNames.PRINTHIDDEN,Boolean.FALSE.toString());
         programKey.put(keyNames.RECURSIVE,Boolean.FALSE.toString());
-        programKey.put(keyNames.MAXDEPTH,String.valueOf(5));
+        programKey.put(keyNames.MAXDEPTH,String.valueOf(0));
         programKey.put(keyNames.COLUMNSEPARATE,"\t");
         programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.FALSE.toString());
 	//условие досрочного завершения.

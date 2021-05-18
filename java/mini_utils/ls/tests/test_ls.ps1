@@ -31,5 +31,5 @@ echo "test 9. -a" #ok
 java -jar ..\out\artifacts\ls_jar\ls.jar -a F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_9_result.txt
 echo "test 10. -h" #ok
 java -jar ..\out\artifacts\ls_jar\ls.jar -h F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_10_result.txt
-echo "test 11. -H" #не работает
+echo "test 11. -H" #не работает. Не виден результат?
 java -jar ..\out\artifacts\ls_jar\ls.jar -H F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_11_result.txt
