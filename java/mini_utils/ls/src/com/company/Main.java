@@ -14,7 +14,6 @@ package com.company;
   -D  включить вывод отладочной информации при работе утилиты.
   -R  Включить рекурсивную выдачу списка каталогов.(по умолчанию стоит максимальная глубина рекурсии)
   -d  Выдавать имена каталогов, как будто они обычные файлы, вместо того, чтобы показывать их содержимое.
-  -C Напечатать список файлов в колонке с вертикальной сортировкой. Если есть ключ --sort=field, то сортировка идёт по полю field. Иначе, сортировка идёт по первому столбцу с именем файла.
   -t  Сортировать по показываемому временному штампу(mtime).
   -l, --format=long, --format=verbose В дополнении к имени каждого файла, выводятся тип файла, права доступа к файлу, количество ссылок на файл,
     имя владельца, имя группы, размер файла в байтах и временной штамп (время последней модификации файла, если не задано другое).
@@ -105,7 +104,7 @@ public class Main {
         PRINTHIDDEN,
         HUMANREADABLEFORMAT,
         SIFORMAT,
-        ONECOLUMN,
+       // ONECOLUMN,
         PRINTHELP,
         LONGFORMAT,
         NOSHOWCATALOG, //влияет в addAllFilesInList
@@ -127,7 +126,7 @@ public class Main {
                 case PRINTHIDDEN: return "a";
                 case HUMANREADABLEFORMAT: return "human-readable";
                 case SIFORMAT: return "s";
-                case ONECOLUMN: return "с";
+                //case ONECOLUMN: return "с";
                 case PRINTHELP: return "h";
                 case LONGFORMAT: return "l";
                 case SORTBYTIMESTAMP: return "t";
@@ -146,7 +145,7 @@ public class Main {
                 case PRINTHIDDEN: return 'a';
                 case HUMANREADABLEFORMAT: return 'H';
                 case SIFORMAT: return 's';
-                case ONECOLUMN: return 'c';
+               // case ONECOLUMN: return 'c';
                 case PRINTHELP: return 'h';
                 case LONGFORMAT: return 'l';
                 case NOSHOWCATALOG: return 'd';
@@ -177,7 +176,7 @@ public class Main {
         }
     }
 
-    private static boolean debug = false;
+     static boolean debug = false;
 
     private static FilePropertyNames sortField = null;
     //хранит в себе порядок вывода столбцов на терминал.
@@ -524,7 +523,10 @@ public class Main {
             //удаляю повторы и включаю нужные флаги
             uniq_string = flags;
             for (char ch : uniq_string.toCharArray()) {
-                if  (ch == keyNames.DEBUG.toChar()) programKey.put(keyNames.DEBUG,Boolean.TRUE.toString());
+                if  (ch == keyNames.DEBUG.toChar()) {
+                    programKey.put(keyNames.DEBUG,Boolean.TRUE.toString());
+                    debug = true;
+                }
                 if  (ch == keyNames.HUMANREADABLEFORMAT.toChar())
                     programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.TRUE.toString());
                 if  (ch == keyNames.LONGFORMAT.toChar()) {
@@ -541,10 +543,13 @@ public class Main {
                 if  (ch == keyNames.NOSHOWCATALOG.toChar() ) {
                     programKey.put(keyNames.NOSHOWCATALOG,Boolean.TRUE.toString());
                 }
+                /*
                 if  (ch == keyNames.ONECOLUMN.toChar() ) {
                     programKey.put(keyNames.ONECOLUMN,Boolean.TRUE.toString());
                     printProperty.put(FilePropertyNames.FILENAME,true);
                 }
+
+                 */
                 if  (ch == keyNames.PRINTHELP.toChar() ) {
                     programKey.put(keyNames.PRINTHELP,Boolean.TRUE.toString());
                     System.out.println(getHelpUtils());
@@ -757,7 +762,7 @@ public class Main {
     }
 
     public static void main(String[] args)  {
-        //очерёдность вывода столбцов в терминал.
+        //начальные значения
         printFilePropertyOrder.add(FilePropertyNames.TYPE);
         printFilePropertyOrder.add(FilePropertyNames.FILENAME);
         printFilePropertyOrder.add(FilePropertyNames.READF);
@@ -768,6 +773,7 @@ public class Main {
         printFilePropertyOrder.add(FilePropertyNames.HIDDENF);
         printFilePropertyOrder.add(FilePropertyNames.PARENT);
 
+        //очерёдность вывода столбцов в терминал.
         printProperty.put(FilePropertyNames.ABSPATH,false);
         printProperty.put(FilePropertyNames.FILENAME,true);
         printProperty.put(FilePropertyNames.CANPATH,false);
@@ -781,6 +787,7 @@ public class Main {
         printProperty.put(FilePropertyNames.READF,false);
         printProperty.put(FilePropertyNames.TOTALSPACE,false);
         printProperty.put(FilePropertyNames.USABLESPACE,false);
+        printProperty.put(FilePropertyNames.FILESIZE,false);
         printProperty.put(FilePropertyNames.WRITEF,false);
         printProperty.put(FilePropertyNames.TYPE,true);
 
@@ -805,30 +812,31 @@ public class Main {
         programKey.put(keyNames.DEBUG,Boolean.FALSE.toString());
         programKey.put(keyNames.LONGFORMAT,Boolean.FALSE.toString());
         programKey.put(keyNames.NOSHOWCATALOG,Boolean.FALSE.toString());
-        programKey.put(keyNames.ONECOLUMN,Boolean.FALSE.toString());
+       // programKey.put(keyNames.ONECOLUMN,Boolean.FALSE.toString());
         programKey.put(keyNames.PRINTHELP,Boolean.FALSE.toString());
         programKey.put(keyNames.PRINTHIDDEN,Boolean.FALSE.toString());
         programKey.put(keyNames.RECURSIVE,Boolean.FALSE.toString());
         programKey.put(keyNames.MAXDEPTH,String.valueOf(0));
         programKey.put(keyNames.COLUMNSEPARATE,"\t");
         programKey.put(keyNames.HUMANREADABLEFORMAT,Boolean.FALSE.toString());
-	//условие досрочного завершения.
+
+        //условие досрочного завершения.
         if (args == null || args.length == 0) {
             return;
         }
         debugPrintProgramProperty();
         String param = args[0];
         File file;// = new File(param);
-
         LinkedList listFiles;
+        int i = 0;
+        while (isParam(args[i])) {
+            prepareKeyString(args[i]);
+            i++;
+        }
+
         /*
             разбор переданных коротких и длинных ключей(они должны быть первыми)
         */
-        int i = 0;
-        while (isParam(args[i])) {
-             prepareKeyString(args[i]);
-             i++;
-        }
         debugPrintProgramProperty();
         if (i >= args.length) return;
         if (programKey.get(keyNames.PRINTHELP).equals(Boolean.TRUE.toString())) {

@@ -15,14 +15,14 @@ java -jar ..\out\artifacts\ls_jar\ls.jar F:\projects\java\mini_utils\ls | Out-Fi
 #  -h печать справки и завершение работы
 #  -H, --human-readable  Добавлять к каждому размеру файла букву размера, например, M для двоичных мегабайт (`мебибайт')
 
-echo "test 3. -D" #не работает
+echo "test 3. -D" #ok. нужно настроить вывод отладки
 java -jar ..\out\artifacts\ls_jar\ls.jar -D F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_3_result.txt
-echo "test 4. -R" #не работает
+echo "test 4. -R" #работает
 java -jar ..\out\artifacts\ls_jar\ls.jar -R F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_4_result.txt
 echo "test 5. -d" #ok
 java -jar ..\out\artifacts\ls_jar\ls.jar -d F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_5_result.txt
-echo "test 6. -C" #не работает
-java -jar ..\out\artifacts\ls_jar\ls.jar -C F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_6_result.txt
+#echo "test 6. -C" #не работает. Не ясно что должен делать столбец) Вполне вероятно, что этот влаг нужно убрать.
+#java -jar ..\out\artifacts\ls_jar\ls.jar -C F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_6_result.txt
 echo "test 7. -t" #ok
 java -jar ..\out\artifacts\ls_jar\ls.jar -t F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_7_result.txt
 echo "test 8. -l" #ok
@@ -31,5 +31,13 @@ echo "test 9. -a" #ok
 java -jar ..\out\artifacts\ls_jar\ls.jar -a F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_9_result.txt
 echo "test 10. -h" #ok
 java -jar ..\out\artifacts\ls_jar\ls.jar -h F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_10_result.txt
-echo "test 11. -H" #не работает. Не виден результат?
+echo "test 11. -H" #не работает. Не виден результат.
 java -jar ..\out\artifacts\ls_jar\ls.jar -H F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_11_result.txt
+
+echo "test 12. -Hl" #ok
+java -jar ..\out\artifacts\ls_jar\ls.jar -Hl F:\projects\java\mini_utils\ls | Out-File F:\projects\java\mini_utils\ls\tests\test_12_result.txt
+
+
+
+
+
