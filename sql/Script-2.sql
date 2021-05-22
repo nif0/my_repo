@@ -109,9 +109,42 @@ insert into sity(sity_id,name) values(8,'Нью-Йорк');
 insert into sity(sity_id,name) values(9,'Париж');
 commit;
 
-
 select * from sity_countries sc left join sity s on sc.sity_sity_id = s.sity_id
 select * from sity_countries sc full join sity s on sc.sity_sity_id = s.sity_id
 
+select * from seats
 
+select * from airports_data ad 
+select * from aircrafts_data ad2 
+select * from aircrafts a 
 
+create view seats_aircrafts as 
+select s.*,a.model,a.range from seats s,aircrafts a where s.aircraft_code = a.aircraft_code
+drop seats_aircrafts;
+
+create materialized view seats_aircrafts2 as
+select s.*,a.model,a.range from seats s,aircrafts a where s.aircraft_code = a.aircraft_code
+drop materialized view seats_aircrafts2
+
+create view v_aircrafts_test as select * from aircrafts a 
+select count(1) from v_aircrafts_test
+insert into aircrafts (aircraft_code,model,range) values ('CR2','Бомбардье CRJ-200',200) 
+drop view v_aircrafts_test
+
+create view v_aircrafts_test as 
+select * from aircrafts_data ad 
+select * from v_aircrafts_test
+insert into v_aircrafts_test (aircraft_code,model,range) values (774,'{"en": "Boeing 777-300", "ru": "Боинг 777-300"}',12000)
+update v_aircrafts_test set range = '13000' where aircraft_code = '774'
+delete from v_aircrafts_test  where aircraft_code = '774'
+alter table v_aircrafts_test add test_col char(100) default 'test'
+alter view v_aircrafts_test add test_col char(100) default 'test'
+drop view v_aircrafts_test;
+create view v_aircrafts_test as 
+select ad.*,'test' from aircrafts_data ad 
+
+create view v_aircrafts_test_ord as 
+select * from aircrafts_data ad order by aircraft_code 
+select * from v_aircrafts_test_ord
+
+describe  aircrafts_data

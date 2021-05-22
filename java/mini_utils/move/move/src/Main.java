@@ -40,7 +40,18 @@ private static String printHelp() {
     private static void move(MoveElement element1, MoveElement element2) {
         //element1 - что перемещаю. имя файла, каталога, либо путь и регулярное выражение.
         //element2 - куда перемещаю. Это новое имя файла, либо каталог(1)
+        //предстартовые проверки
+        /*
+        if (element2.getNumberRealElement() == 0) {
+            System.out.println("не указано новое имя/пункт назначения для перемещения");
+            return;
+        }
+        */
 
+        if (element1.getNumberRealElement() == 0) {
+            System.out.println("объекты для перемещения/переименования не найдены");
+            return;
+        }
         if (element2.getNumberRealElement() == 0) {
             //ситуация: переименование(замена) файла.
             //если каталога не существует, то имя считается названием файла

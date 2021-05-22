@@ -48,6 +48,7 @@ public class MoveElement {
             pattern = Pattern.compile("");
         }
         arrayList = getItemList();
+
     }
 
     public MoveElement(String path, String filemask) {
@@ -130,7 +131,5 @@ public class MoveElement {
     public String getOriginalPath() {
         return originalPath;
     }
-
-
 
 }
