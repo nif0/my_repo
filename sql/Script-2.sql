@@ -17,6 +17,12 @@ select max(amount) from ticket_flights tf3
 select min(amount) from ticket_flights tf4 
 
 select * from aircrafts a, aircrafts_data ad where a.aircraft_code = ad.aircraft_code
+select * from aircrafts a, aircrafts_data ad where a.aircraft_code = ad.aircraft_code and a.model like '300%'
+select * from aircrafts a, aircrafts_data ad where a.aircraft_code = ad.aircraft_code and a.model like '%300%'
+select * from aircrafts a, aircrafts_data ad where a.aircraft_code = ad.aircraft_code and a.model like '%7_7_300'
+select * from aircrafts a, aircrafts_data ad where a.aircraft_code = ad.aircraft_code and a.model like '300%'
+select * from aircrafts a, aircrafts_data ad where a.aircraft_code = ad.aircraft_code and a.model like '_____ ___-%3%__'
+
 --join'ы
 select * from aircrafts a3 
 left join 
@@ -113,6 +119,8 @@ select * from sity_countries sc left join sity s on sc.sity_sity_id = s.sity_id
 select * from sity_countries sc full join sity s on sc.sity_sity_id = s.sity_id
 
 select * from seats
+select * from flights f2 
+select * from tickets t 
 
 select * from airports_data ad 
 select * from aircrafts_data ad2 
@@ -139,12 +147,32 @@ update v_aircrafts_test set range = '13000' where aircraft_code = '774'
 delete from v_aircrafts_test  where aircraft_code = '774'
 alter table v_aircrafts_test add test_col char(100) default 'test'
 alter view v_aircrafts_test add test_col char(100) default 'test'
-drop view v_aircrafts_test;
-create view v_aircrafts_test as 
-select ad.*,'test' from aircrafts_data ad 
+drop view v_aircrafts_test2;
 
-create view v_aircrafts_test_ord as 
-select * from aircrafts_data ad order by aircraft_code 
-select * from v_aircrafts_test_ord
+create view v_aircrafts_test2 as 
+select * from aircrafts_data ad  where range < 7000 
+with check option
+insert into v_aircrafts_test2 (aircraft_code,model,range) VALUES ('S35','{"en": "Sukhoi Superjet-500", "ru": "Сухой Суперджет-100"}',11780)
 
-describe  aircrafts_data
+create or replace view v_aircrafts_test2 as 
+select * from aircrafts_data ad  where range < 7000 
+delete from aircrafts_data where aircraft_code = 'S35'
+
+create or replace view v_aircrafts_test2 as 
+select ad.*,'test' as "t" from aircrafts_data ad  where range < 7000 with check option
+select * from v_aircrafts_test2
+insert into v_aircrafts_test2 (aircraft_code,model,range) VALUES ('S35','{"en": "Sukhoi Superjet-500", "ru": "Сухой Суперджет-100"}',6780)
+
+
+create view v_aircrafts_test2 as 
+select * from aircrafts_data ad  where range < 7000 
+with check option
+insert into v_aircrafts_test2 (aircraft_code,model,range) VALUES ('S35','{"en": "Sukhoi Superjet-500", "ru": "Сухой Суперджет-100"}',11780)
+
+
+create view v_aircrafts_test_ord_aircode as 
+select aircraft_code from aircrafts_data ad order by aircraft_code 
+select * from v_aircrafts_test_ord_aircode
+insert into v_aircrafts_test_ord_aircode (aircraft_code) values (123)
+
+
