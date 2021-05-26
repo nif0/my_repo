@@ -114,6 +114,7 @@ insert into sity(sity_id,name) values(7,'Пекин');
 insert into sity(sity_id,name) values(8,'Нью-Йорк');
 insert into sity(sity_id,name) values(9,'Париж');
 commit;
+SELECT * FROM sity
 
 select * from sity_countries sc left join sity s on sc.sity_sity_id = s.sity_id
 select * from sity_countries sc full join sity s on sc.sity_sity_id = s.sity_id
@@ -175,4 +176,12 @@ select aircraft_code from aircrafts_data ad order by aircraft_code
 select * from v_aircrafts_test_ord_aircode
 insert into v_aircrafts_test_ord_aircode (aircraft_code) values (123)
 
+SELECT table_name,column_name,data_type FROM user_tab_cols
+SELECT * FROM all_tab_cols WHERE owner='SYSTEM' AND table_name = 'SITY'
+
+SELECT table_name,column_name,data_type FROM user_tab_columns utc WHERE lower(utc.table_name) LIKE '%city%'
+
+
+
+ 
 

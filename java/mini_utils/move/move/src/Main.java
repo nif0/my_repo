@@ -11,32 +11,38 @@ public class Main {
 /*
 
 аргументы:
- -p - :создаёт полное дерево пути в адресе назначения
  -h - :вывод справки
- -r - :рекурсивное копирование каталогов
- -t - :воссоздание копируемого дерева каталогов в целевом каталоге
+ -b - :backup В случае совпадения имён, старое имя изменяется по шаблону: <name>.<cur_date>
+ -u - :update Перемещает только те файлы/каталоги, которых нет в пути назначения.
  */
     private enum Flags {
         CREATEPATH,
         PRINTHELP,
-        RECURSIVE,
-        COPYCATALOG;
+        RECURSIVE;
+
         public char toChar() {
             char result = ' ';
             switch (this) {
                 case CREATEPATH: return 'p';
                 case PRINTHELP: return 'h';
                 case RECURSIVE: return 'r';
-                case COPYCATALOG: return 't';
                 default: throw new IllegalArgumentException();
             }
         }
     }
     private static Map<Flags,Boolean> flagsEnumMap = new HashMap<Flags, Boolean>();
 
-private static String printHelp() {
-    return "help";
+    private static String printHelp() {
+        StringBuilder b = new StringBuilder();
+        b.append("Переименовывает файл/каталог, или перемещает его в новую директорию \n");
+        return b.toString();
 }
+    private static void init() {
+        flagsEnumMap.put(Flags.CREATEPATH,false);
+        flagsEnumMap.put(Flags.PRINTHELP,false);
+        flagsEnumMap.put(Flags.RECURSIVE,false);
+    }
+
     private static void move(MoveElement element1, MoveElement element2) {
         //element1 - что перемещаю. имя файла, каталога, либо путь и регулярное выражение.
         //element2 - куда перемещаю. Это новое имя файла, либо каталог(1)
@@ -105,10 +111,7 @@ private static String printHelp() {
     public static void main (String[] args) {
         int args_count = 0;
         String tmp = args[1];
-        flagsEnumMap.put(Flags.PRINTHELP,false);
-        flagsEnumMap.put(Flags.COPYCATALOG,false);
-        flagsEnumMap.put(Flags.CREATEPATH,false);
-        flagsEnumMap.put(Flags.COPYCATALOG,false);
+        init();
         //проверить количество параметров
         if (args.length == 1) {
             //передали один аргумент. Начало с "-" - значит что идёт строка с короткими значениями
@@ -134,13 +137,10 @@ private static String printHelp() {
             if (args[0].substring(0,1).equals("-")) {
                 //разбираем флаги
                 for (char c : args[0].toCharArray()) {
-                    if (c == Flags.COPYCATALOG.toChar()) {
-                        flagsEnumMap.replace(Flags.COPYCATALOG,true);
-                        continue;
-                    }
                     if (c == Flags.PRINTHELP.toChar()) {
                         flagsEnumMap.replace(Flags.PRINTHELP,true);
-                        continue;
+                        System.out.println(printHelp());
+                        return;
                     }
                     if (c == Flags.CREATEPATH.toChar()) {
                         flagsEnumMap.replace(Flags.CREATEPATH,true);
