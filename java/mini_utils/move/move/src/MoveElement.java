@@ -132,4 +132,9 @@ public class MoveElement {
         return originalPath;
     }
 
+    public boolean checkInside(File f) {
+        //проверяет, существует ли файл с таким же именем внутри перемещаемого объекта.
+        return false;
+    }
+
 }

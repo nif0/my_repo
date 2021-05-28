@@ -1,11 +1,7 @@
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.io.FileInputStream;
-import java.util.regex.Pattern;
-import java.lang.Enum;
 
 public class Main {
 /*
@@ -16,31 +12,34 @@ public class Main {
  -u - :update Перемещает только те файлы/каталоги, которых нет в пути назначения.
  */
     private enum Flags {
-        CREATEPATH,
+        BACKUP,
         PRINTHELP,
-        RECURSIVE;
+        CREATEPATH,
+        UPDATE;
 
         public char toChar() {
             char result = ' ';
             switch (this) {
-                case CREATEPATH: return 'p';
+                case BACKUP: return 'b';
                 case PRINTHELP: return 'h';
-                case RECURSIVE: return 'r';
+                case UPDATE: return 'u';
+                case CREATEPATH: return 'p';
                 default: throw new IllegalArgumentException();
             }
         }
     }
     private static Map<Flags,Boolean> flagsEnumMap = new HashMap<Flags, Boolean>();
 
-    private static String printHelp() {
+    private static String getHelpString() {
         StringBuilder b = new StringBuilder();
         b.append("Переименовывает файл/каталог, или перемещает его в новую директорию \n");
         return b.toString();
 }
     private static void init() {
-        flagsEnumMap.put(Flags.CREATEPATH,false);
+        flagsEnumMap.put(Flags.UPDATE,false);
         flagsEnumMap.put(Flags.PRINTHELP,false);
-        flagsEnumMap.put(Flags.RECURSIVE,false);
+        flagsEnumMap.put(Flags.BACKUP,false);
+        flagsEnumMap.put(Flags.CREATEPATH,false);
     }
 
     private static void move(MoveElement element1, MoveElement element2) {
@@ -60,10 +59,10 @@ public class Main {
         }
         if (element2.getNumberRealElement() == 0) {
             //ситуация: переименование(замена) файла.
-            //если каталога не существует, то имя считается названием файла
-            if (!element2.closeSeparator() && element1.getNumberRealElement()== 1) {
-                String pathName = element2.getExsistPath()+File.separator+element2.getNameMask();
-                element1.getFileList().get(0).renameTo(new File(pathName));
+            //если каталога не существует, то имя считается названием файла.
+            if  (!element2.closeSeparator() && element1.getNumberRealElement()== 1) {
+                    String pathName = element2.getExsistPath()+File.separator+element2.getNameMask();
+                    element1.getFileList().get(0).renameTo(new File(pathName));
                 return;
             }
             //closeSeparator == true. нужно поместить объект ВНУТРЬ каталога. нужен ключ p
@@ -77,32 +76,80 @@ public class Main {
                             file.renameTo(new File(f.getAbsolutePath()+File.separator+file.getName()));
                         }
                     });
+                } else {
+                    element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
                 }
             }
         }
         if (element2.getNumberRealElement() == 1) {
             //ситуация: переименование(замена) файла.
-            if (element2.getNumberFiles() == 1 && element1.getNumberFiles() == 1) {
-                 element2.getFileList().get(0).delete();
-                 element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+            if  (element2.getNumberFiles() == 1 && element1.getNumberFiles() == 1) {
+                if (flagsEnumMap.get(Flags.UPDATE)) {
+                    if ( element2.getFileList().get(0).compareTo(element2.getFileList().get(0)) != 0 ) {
+                        element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                    }
+                } else {
+                    element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                }
+                 /*
+                     element2.getFileList().get(0).delete();
+                     element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                 */
                  return;
             }
             //ситуация: переименование директории
-            if (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && !element2.closeSeparator()) {
-                element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+            if  (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && !element2.closeSeparator()) {
+                //element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                if (flagsEnumMap.get(Flags.UPDATE)) {
+                    if ( element2.getFileList().get(0).compareTo(element2.getFileList().get(0)) != 0 ) {
+                        element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                    }
+                } else {
+                    element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                }
             }
             //ситуация: перемещение директории внутрь
-            if (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && element2.closeSeparator()) {
-                element1.getFileList().get(0).renameTo(new File(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()));
+            if  (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && element2.closeSeparator()) {
+                if (flagsEnumMap.get(Flags.UPDATE)) {
+                    if (element2.getFileList().get(0).compareTo(element2.getFileList().get(0)) != 0) {
+                        element1.getFileList().get(0).renameTo(new File(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()));
+                    }
+                } else {
+                    element1.getFileList().get(0).renameTo(new File(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()));
+                }
             }
             //ситуация: файл(ы) и каталоги внутрь каталога
-            if (element2.getNumberDirectories() == 1 &&
+            File newFile;
+            if  (element2.getNumberDirectories() == 1 &&
                     element1.getNumberFiles() >= 1 &&
                     element2.closeSeparator()) {
                 String newName = "";
+                LocalDateTime date = LocalDateTime.now();
                 for (File f : element1.getFileList()) {
                     newName = element2.getExsistPath()+f.getName();
-                    f.renameTo(new File(newName));
+                    newFile = new File(newName);
+                    if  (flagsEnumMap.get(Flags.UPDATE)) {
+                        //пропуск при совпадении имён
+                        if (newFile.exists()) {
+                            continue;
+                        } else {
+                            f.renameTo(new File(newName));
+                        }
+                    } else if (flagsEnumMap.get(Flags.BACKUP)){
+                        if (newFile.exists()) {
+                            newName = newName +"."+ Integer.toString(date.getYear()) + "." +
+                                    Integer.toString(date.getMonthValue()) + "." +
+                                    Integer.toString(date.getDayOfMonth())+"_"+
+                                    Integer.toString(date.getHour()) +
+                                    Integer.toString(date.getMinute()) +
+                                    Integer.toString(date.getSecond());
+                            f.renameTo(new File(newName));
+                        } else {
+                            f.renameTo(new File(newName));
+                        }
+                    } else {
+                        f.renameTo(new File(newName));
+                    }
                 }
             }
         }
@@ -119,7 +166,8 @@ public class Main {
                 char c = args[0].charAt(1);
                 if (c == Flags.PRINTHELP.toChar()) {
                     flagsEnumMap.replace(Flags.PRINTHELP, true);
-                    System.out.println(printHelp());
+                    System.out.println(getHelpString());
+                    System.err.println("test");
                 }
             }
         }
@@ -139,15 +187,19 @@ public class Main {
                 for (char c : args[0].toCharArray()) {
                     if (c == Flags.PRINTHELP.toChar()) {
                         flagsEnumMap.replace(Flags.PRINTHELP,true);
-                        System.out.println(printHelp());
+                        System.out.println(getHelpString());
                         return;
                     }
                     if (c == Flags.CREATEPATH.toChar()) {
                         flagsEnumMap.replace(Flags.CREATEPATH,true);
                         continue;
                     }
-                    if (c == Flags.RECURSIVE.toChar()) {
-                        flagsEnumMap.replace(Flags.RECURSIVE,true);
+                    if (c == Flags.UPDATE.toChar()) {
+                        flagsEnumMap.replace(Flags.UPDATE,true);
+                        continue;
+                    }
+                    if (c == Flags.BACKUP.toChar()) {
+                        flagsEnumMap.replace(Flags.BACKUP,true);
                         continue;
                     }
                     if (c == '-') continue;
