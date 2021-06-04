@@ -181,7 +181,19 @@ SELECT * FROM all_tab_cols WHERE owner='SYSTEM' AND table_name = 'SITY'
 
 SELECT table_name,column_name,data_type FROM user_tab_columns utc WHERE lower(utc.table_name) LIKE '%city%'
 
+select * from flight_and_passenger fap 
+select * from boarding_passes
 
+select count( distinct ticket_no) from boarding_passes bp 
 
+select count(seat_no) from boarding_passes bp 
+
+select count (distinct flight_id) from boarding_passes
+select flight_id,count(flight_id)  from boarding_passes group by flight_id
+
+select count(distinct boarding_no) from boarding_passes
+select boarding_no,count(1) from boarding_passes bp group by boarding_no
  
+
+
 
