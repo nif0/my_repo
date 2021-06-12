@@ -41,19 +41,29 @@ full join
 aircrafts_data ad 
 using (aircraft_code) 
 
+select * from aircrafts_data ad 
+union all
+(select * from aircrafts_data ad )
+
 
 --каждый с каждым
 select * from aircrafts a3 
-cross join 
+cross outer join 
 aircrafts_data ad 
+ 
+aircrafts a3
+using(aircraft_code )
 
-select * from aircrafts a3 
+
+select count(*) from aircrafts_data a 
+
+select count(*) from aircrafts a3 
 inner join 
 aircrafts_data ad 
 on a3.aircraft_code = ad.aircraft_code 
 
 select * from aircrafts a3 
-full join 
+full outer join 
 aircrafts_data ad 
 on a3.aircraft_code = ad.aircraft_code 
 
@@ -80,10 +90,14 @@ select cast('0100' as integer)
 select cast('0100' as text)
 create table binary_t (value integer) ;
 
-insert into binary_t(value) values(0);
+insert into binary_t(value) values(100);
 select * from binary_t
 commit;
 select case value when 0 then '0' when 1 then '1' when 2 then '2' else null end from binary_t
+update binary_t set value=1,value=2 
+select * from flight_and_passenger fap 
+update flight_and_passenger set ticket_ticket_no=1,passenger_passenger_id=2
+delete from flight_and_passenger
 
 select value from binary_t bt where (select value from binary_t where value = 5) = 5
 select value from binary_t bt where exists (select value from binary_t where value is null) 
@@ -104,7 +118,7 @@ create table sity (
 sity_id integer primary key,
 name varchar(200)
 );
-insert into sity(sity_id,name) values(1,'Москва');
+insert into sity(sity_id,name) values(111,default);
 insert into sity(sity_id,name) values(2,'Екатеринбург');
 insert into sity(sity_id,name) values(3,'Владивосток');
 insert into sity(sity_id,name) values(4,'Архангельск');
@@ -115,6 +129,8 @@ insert into sity(sity_id,name) values(8,'Нью-Йорк');
 insert into sity(sity_id,name) values(9,'Париж');
 commit;
 SELECT * FROM sity
+select all *  from
+   select * from sity 
 
 select * from sity_countries sc left join sity s on sc.sity_sity_id = s.sity_id
 select * from sity_countries sc full join sity s on sc.sity_sity_id = s.sity_id
@@ -139,6 +155,8 @@ create view v_aircrafts_test as select * from aircrafts a
 select count(1) from v_aircrafts_test
 insert into aircrafts (aircraft_code,model,range) values ('CR2','Бомбардье CRJ-200',200) 
 drop view v_aircrafts_test
+
+
 
 create view v_aircrafts_test as 
 select * from aircrafts_data ad 
@@ -188,7 +206,13 @@ select * from boarding_passes
 select count( distinct ticket_no) from boarding_passes bp 
 
 select count(distinct seat_no) from boarding_passes bp 
-select seat_no ,count(*) from boarding_passes bp2 group by seat_no 
+select seat_no ,count(*) from boarding_passes bp2 group by seat_no having count(*) < 10000
+create view boarding_passes_44C as 
+select * from boarding_passes bp3 where seat_no = '44C'
+select count(*) from boarding_passes_44C
+select seat_no ,count(*)  from boarding_passes bp4 where seat_no in 
+(select seat_no from boarding_passes bp2 group by seat_no having count(*) < 10000)
+group by seat_no
 
 select count (distinct flight_id) from boarding_passes
 select flight_id,count(flight_id)  from boarding_passes group by flight_id
@@ -196,3 +220,23 @@ select flight_id,count(flight_id)  from boarding_passes group by flight_id
 select count(distinct boarding_no) from boarding_passes
 select boarding_no,count(1) from boarding_passes bp group by boarding_no
 
+select distinct boarding_passes.boarding_no from boarding_passes binary_t
+select * from boarding_passes bp 
+select * from bookings b 
+select min(flight_id) from flights f where flight_no = 'P%' group by scheduled_departure order by flight_id 
+
+select * from flights f where f.flight_no = max(f.flight_no)
+
+create table test (
+a float not null default 3)
+create table test2 (
+a float not null default (3))
+create table test7 (
+a float not null default (3), constraint check (1+a<5))
+
+create table test8 (
+a float  foreign key  references test2 (a) on delete set null 
+)
+
+select * from test
+delete  test2
