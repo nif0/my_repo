@@ -59,10 +59,10 @@ java -jar ..\move\out\artifacts\move_jar\move.jar /sdfsdf/www /dev/null | Out-Fi
 echo "sleep 10"; sleep 10;
 
 echo "start test3 move to non-existing folder "
-#ожидаю сообщение о невозможности перемещения в несуществующее место назначения. не работает.
+#перемещение в несуществующее место назначения. РАБОТАЕТ.
 echo "sleep 10"; sleep 10;
 echo "move to non-existing folder " | Out-File ..\tests\test3\file.fi
-java -jar ..\move\out\artifacts\move_jar\move.jar ..\tests\test3\file.fi ..\tests\test3\qqqwww | Out-File ..\tests\test3\test_3-6_result.txt
+java -jar ..\move\out\artifacts\move_jar\move.jar ..\tests\test3\file.fi ..\tests\test3\qqqwww\ | Out-File ..\tests\test3\test_3-6_result.txt
 echo "sleep 10"; sleep 10;
 
 

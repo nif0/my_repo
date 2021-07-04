@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class MoveElement {
 
 
 
-    public MoveElement(String f) {
+    public MoveElement(String f) throws FileNotFoundException {
         originalPath = f;
         if (f.indexOf("\"") == f.length()-1) {
             f = f.substring(0,f.length()-1);
@@ -25,12 +26,25 @@ public class MoveElement {
         }
         String t = f.substring(f.length()-1);
         closeSeparator = (t.equals(File.separator));
+        if (closeSeparator) {
+            f = f.substring(0,f.length()-1);
+        }
         File x;
         x = new File(f);
+        //После этого цикла должна остаться только существующая часть имени файла.
+        //которую записываю в перемменную existsPath
         while (!x.exists()) {
             x = new File(x.getParent());
         }
         existsPath = x.toPath().toString() + (closeSeparator ? File.separator : "");
+        /*
+        В конце пути поставлен закрывающий разделитель
+        (речь идёт имени каталога) и при этом каталог x не существует, либо это не каталог
+         */
+        if ( closeSeparator() && !(new File(originalPath)).isDirectory()) {
+            throw new FileNotFoundException("directory: " + originalPath + " not exist");
+        }
+
         try {
             //выход за границы массива при компиляции паттерна в ситуации, когда existsPath > f.
             if (f.length() < existsPath.length()) {
@@ -40,6 +54,7 @@ public class MoveElement {
                     nameMask = "";
                 } else nameMask = f.substring(existsPath.length() + 1);
             }
+
             pattern = Pattern.compile(nameMask);
         }
         catch (Exception e) {
@@ -137,8 +152,5 @@ public class MoveElement {
         //надеюсь использовать для проверки результатов перемещения
         return false;
     }
-    
-    public boolean
-    
-
+    //public boolean
 }

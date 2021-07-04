@@ -1,4 +1,8 @@
 import java.io.*;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
@@ -42,7 +46,15 @@ public class Main {
         flagsEnumMap.put(Flags.CREATEPATH,false);
     }
 
+    private static void changeFileName(String name1, String name2) {
+        if (!Files.exists(Paths.get(name1))) {
+            new IllegalArgumentException();
+        }
+
+    }
+
     private static void move(MoveElement element1, MoveElement element2) {
+        String pathName = null;
         //element1 - что перемещаю. имя файла, каталога, либо путь и регулярное выражение.
         //element2 - куда перемещаю. Это новое имя файла, либо каталог(1)
         //предстартовые проверки
@@ -61,8 +73,11 @@ public class Main {
             //ситуация: переименование(замена) файла.
             //если каталога не существует, то имя считается названием файла.
             if  (!element2.closeSeparator() && element1.getNumberRealElement()== 1) {
-                    String pathName = element2.getExsistPath()+File.separator+element2.getNameMask();
+                    pathName = element2.getExsistPath()+File.separator+element2.getNameMask();
                     element1.getFileList().get(0).renameTo(new File(pathName));
+                    if (!Files.exists(Paths.get(pathName))) {
+                        System.out.println("file not rename");
+                    }
                 return;
             }
             //closeSeparator == true. нужно поместить объект ВНУТРЬ каталога. нужен ключ p
@@ -74,10 +89,16 @@ public class Main {
                         @Override
                         public void accept(File file) {
                             file.renameTo(new File(f.getAbsolutePath()+File.separator+file.getName()));
+                            if (!Files.exists(Paths.get(f.getAbsolutePath()+File.separator+file.getName()))) {
+                                System.out.println("file not rename");
+                            }
                         }
                     });
                 } else {
                     element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                    if (!Files.exists(element2.getFileList().get(0).toPath())) {
+                        System.out.println("file not rename");
+                    }
                 }
             }
         }
@@ -87,9 +108,20 @@ public class Main {
                 if (flagsEnumMap.get(Flags.UPDATE)) {
                     if ( element2.getFileList().get(0).compareTo(element2.getFileList().get(0)) != 0 ) {
                         element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                        if (!Files.exists(Paths.get(pathName))) {
+                            System.out.println("file not rename");
+                        }
                     }
                 } else {
+                    pathName = element2.getFileList().get(0).getPath();
                     element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                    try {
+                        if (!Files.exists(Paths.get(pathName))) {
+                            System.out.println("file not rename");
+                        }
+                    } catch (NullPointerException e) {
+                        System.out.println(pathName + "is not valid");
+                    }
                 }
                  /*
                      element2.getFileList().get(0).delete();
@@ -104,8 +136,14 @@ public class Main {
                     if ( element2.getFileList().get(0).compareTo(element2.getFileList().get(0)) != 0 ) {
                         element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
                     }
+                    if (!Files.exists(Paths.get(pathName))) {
+                        System.out.println("file not rename");
+                    }
                 } else {
                     element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
+                    if (!Files.exists(Paths.get(element2.getFileList().get(0).getPath()))) {
+                        System.out.println("file not move");
+                    }
                 }
             }
             //ситуация: перемещение директории внутрь
@@ -113,9 +151,15 @@ public class Main {
                 if (flagsEnumMap.get(Flags.UPDATE)) {
                     if (element2.getFileList().get(0).compareTo(element2.getFileList().get(0)) != 0) {
                         element1.getFileList().get(0).renameTo(new File(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()));
+                        if (!Files.exists(Paths.get(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()))) {
+                            System.out.println("file not move");
+                        }
                     }
                 } else {
                     element1.getFileList().get(0).renameTo(new File(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()));
+                    if (!Files.exists(Paths.get(element2.getExsistPath() + File.separator + element1.getFileList().get(0).getName()))) {
+                        System.out.println("file not move");
+                    }
                 }
             }
             //ситуация: файл(ы) и каталоги внутрь каталога
@@ -155,6 +199,7 @@ public class Main {
         }
     }
 
+
     public static void main (String[] args) {
         int args_count = 0;
         String tmp = args[1];
@@ -177,9 +222,17 @@ public class Main {
                 System.out.println("ошибка в случае 2х аргументов");
                 return;
            }
-           MoveElement element1 = new MoveElement(args[0]);
-           MoveElement element2 = new MoveElement(args[1]);
-           move(element1,element2);
+            MoveElement element1 = null;
+            MoveElement element2 = null;
+            try {
+                element1 = new MoveElement(args[0]);
+                element2 = new MoveElement(args[1]);
+            } catch (FileNotFoundException e) {
+                System.out.println(e.getMessage());
+                return;
+            }
+            move(element1, element2);
+
         }
         if (args.length == 3) {
             if (args[0].substring(0,1).equals("-")) {
@@ -207,11 +260,18 @@ public class Main {
                 }
             }
             //флаги прочитаны. Ожидаю что оставшиеся два аргумента будут валидными путями в ФС.
-            MoveElement element1 = new MoveElement(args[1]);
-            MoveElement element2 = new MoveElement(args[2]);
-            move(element1,element2);
+            MoveElement element1 = null;
+            MoveElement element2 = null;
+            try {
+                element1 = new MoveElement(args[1]);
+                element2 = new MoveElement(args[2]);
+            } catch (FileNotFoundException e) {
+                System.out.println(e.getMessage());
+                return;
+            }
+            move(element1, element2);
+
         }
-            //
     }
 
 }
