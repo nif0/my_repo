@@ -8,13 +8,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class Main {
-/*
-
-аргументы:
- -h - :вывод справки
- -b - :backup В случае совпадения имён, старое имя изменяется по шаблону: <name>.<cur_date>
- -u - :update Перемещает только те файлы/каталоги, которых нет в пути назначения.
- */
     private enum Flags {
         BACKUP,
         PRINTHELP,
@@ -36,7 +29,10 @@ public class Main {
 
     private static String getHelpString() {
         StringBuilder b = new StringBuilder();
-        b.append("Переименовывает файл/каталог, или перемещает его в новую директорию \n");
+        b.append("Renames a file / directory, or moves it to a new directory \n");
+        b.append("-h -: help output\n " +
+                " - b -: backup In case of a name match, the old name is changed according to the template: <name>.<cur_date>\n " +
+                " - u -: update Moves only those files/directories that are not in the destination path.\n");
         return b.toString();
 }
     private static void init() {
@@ -55,23 +51,11 @@ public class Main {
 
     private static void move(MoveElement element1, MoveElement element2) {
         String pathName = null;
-        //element1 - что перемещаю. имя файла, каталога, либо путь и регулярное выражение.
-        //element2 - куда перемещаю. Это новое имя файла, либо каталог(1)
-        //предстартовые проверки
-        /*
-        if (element2.getNumberRealElement() == 0) {
-            System.out.println("не указано новое имя/пункт назначения для перемещения");
-            return;
-        }
-        */
-
         if (element1.getNumberRealElement() == 0) {
             System.out.println("объекты для перемещения/переименования не найдены");
             return;
         }
         if (element2.getNumberRealElement() == 0) {
-            //ситуация: переименование(замена) файла.
-            //если каталога не существует, то имя считается названием файла.
             if  (!element2.closeSeparator() && element1.getNumberRealElement()== 1) {
                     pathName = element2.getExsistPath()+File.separator+element2.getNameMask();
                     element1.getFileList().get(0).renameTo(new File(pathName));
@@ -123,10 +107,6 @@ public class Main {
                         System.out.println(pathName + "is not valid");
                     }
                 }
-                 /*
-                     element2.getFileList().get(0).delete();
-                     element1.getFileList().get(0).renameTo(element2.getFileList().get(0));
-                 */
                  return;
             }
             //ситуация: переименование директории
@@ -146,7 +126,6 @@ public class Main {
                     }
                 }
             }
-            //ситуация: перемещение директории внутрь
             if  (element2.getNumberDirectories() == 1 && element1.getNumberDirectories() == 1  && element2.closeSeparator()) {
                 if (flagsEnumMap.get(Flags.UPDATE)) {
                     if (element2.getFileList().get(0).compareTo(element2.getFileList().get(0)) != 0) {
@@ -162,7 +141,6 @@ public class Main {
                     }
                 }
             }
-            //ситуация: файл(ы) и каталоги внутрь каталога
             File newFile;
             if  (element2.getNumberDirectories() == 1 &&
                     element1.getNumberFiles() >= 1 &&
@@ -173,7 +151,6 @@ public class Main {
                     newName = element2.getExsistPath()+f.getName();
                     newFile = new File(newName);
                     if  (flagsEnumMap.get(Flags.UPDATE)) {
-                        //пропуск при совпадении имён
                         if (newFile.exists()) {
                             continue;
                         } else {
@@ -204,9 +181,7 @@ public class Main {
         int args_count = 0;
         String tmp = args[1];
         init();
-        //проверить количество параметров
         if (args.length == 1) {
-            //передали один аргумент. Начало с "-" - значит что идёт строка с короткими значениями
             if (args[0].substring(0, 1).equals("-")) {
                 char c = args[0].charAt(1);
                 if (c == Flags.PRINTHELP.toChar()) {
@@ -217,9 +192,8 @@ public class Main {
             }
         }
         if (args.length == 2) {
-           //передали два аргумента. В этом случае считаю что строки со флагами нет.
            if (args[0].substring(0,1).equals("-")) {
-                System.out.println("ошибка в случае 2х аргументов");
+                System.out.println("invalid number of arguments");
                 return;
            }
             MoveElement element1 = null;
@@ -236,7 +210,6 @@ public class Main {
         }
         if (args.length == 3) {
             if (args[0].substring(0,1).equals("-")) {
-                //разбираем флаги
                 for (char c : args[0].toCharArray()) {
                     if (c == Flags.PRINTHELP.toChar()) {
                         flagsEnumMap.replace(Flags.PRINTHELP,true);
@@ -259,7 +232,6 @@ public class Main {
                     throw new IllegalArgumentException("");
                 }
             }
-            //флаги прочитаны. Ожидаю что оставшиеся два аргумента будут валидными путями в ФС.
             MoveElement element1 = null;
             MoveElement element2 = null;
             try {

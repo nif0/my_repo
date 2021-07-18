@@ -31,22 +31,15 @@ public class MoveElement {
         }
         File x;
         x = new File(f);
-        //После этого цикла должна остаться только существующая часть имени файла.
-        //которую записываю в перемменную existsPath
         while (!x.exists()) {
             x = new File(x.getParent());
         }
         existsPath = x.toPath().toString() + (closeSeparator ? File.separator : "");
-        /*
-        В конце пути поставлен закрывающий разделитель
-        (речь идёт имени каталога) и при этом каталог x не существует, либо это не каталог
-         */
         if ( closeSeparator() && !(new File(originalPath)).isDirectory()) {
             throw new FileNotFoundException("directory: " + originalPath + " not exist");
         }
 
         try {
-            //выход за границы массива при компиляции паттерна в ситуации, когда existsPath > f.
             if (f.length() < existsPath.length()) {
                 nameMask = "";
             } else {
@@ -98,7 +91,6 @@ public class MoveElement {
     }
 
     public long getNumberDirectories() {
-        //return 0;
         long result = 0;
         Predicate<File> p = new Predicate<File>() {
             @Override
@@ -111,7 +103,6 @@ public class MoveElement {
     }
 
     public long getNumberFiles() {
-       // return 0;
         long result = 0;
         Predicate<File> p = new Predicate<File>() {
             @Override
@@ -146,11 +137,4 @@ public class MoveElement {
     public String getOriginalPath() {
         return originalPath;
     }
-
-    public boolean checkInside(File f) {
-        //проверяет, существует ли файл с таким же именем внутри перемещаемого набора.
-        //надеюсь использовать для проверки результатов перемещения
-        return false;
-    }
-    //public boolean
 }
