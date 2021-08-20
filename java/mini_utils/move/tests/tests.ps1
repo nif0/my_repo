@@ -118,4 +118,9 @@ echo "sleep 10"; sleep 10;
 echo "key: -h. sleep 2"; sleep 2;
 java -jar ..\move\out\artifacts\move_jar\move.jar -h ..\tests\test5\f2\^.*.txt ..\tests\test5\f1\ | Out-File ..\tests\test5\test_5-7_result.txt
 
+echo "sleep 10"; sleep 10;
+echo "key: -h. sleep 2"; sleep 2;
+java -jar ..\move\out\artifacts\move_jar\move.jar -H ..\tests\test5\f2\^.*.txt ..\tests\test5\f1\ | Out-File ..\tests\test5\test_5-8_result.txt
+
+
 echo "test 5 multiple keys"; sleep 10;
