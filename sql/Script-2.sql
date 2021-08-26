@@ -235,8 +235,11 @@ create table test7 (
 a float not null default (3), constraint check (1+a<5))
 
 create table test8 (
-a float  foreign key  references test2 (a) on delete set null 
+  a float  foreign key  references test2 (a) on delete set null 
 )
 
 select * from test
 delete  test2
+
+select * from bookings
+select * from flights
