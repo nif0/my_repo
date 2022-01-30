@@ -13,7 +13,7 @@ select count(1) from aircrafts a2
 select sum(amount) from ticket_flights tf 
 select count(amount) from ticket_flights tf 
 select avg(amount) from ticket_flights tf2 
-select max(amount) from ticket_flights tf3 
+select max(amount) from ticket_flights tf3     
 select min(amount) from ticket_flights tf4 
 
 select * from aircrafts a, aircrafts_data ad where a.aircraft_code = ad.aircraft_code
