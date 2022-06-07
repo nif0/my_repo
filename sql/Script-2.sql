@@ -243,3 +243,6 @@ delete  test2
 
 select * from bookings
 select * from flights
+
+select seat_no ,count(*) from boarding_passes bp2 group by seat_no;
+select count(*) from ( select seat_no ,count(*) from boarding_passes bp2 group by seat_no ) q;
